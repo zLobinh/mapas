@@ -3,7 +3,7 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 
 const ID = "com.imagem-link";
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 // full address of a file of this extension (Owlbear needs it absolute)
 const asset = (path) => new URL(path, import.meta.url).href;
 

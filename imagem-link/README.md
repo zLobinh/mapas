@@ -35,12 +35,13 @@ mostram (a extensão avisa). Um mapa de rally comprido pode ser dividido em peda
 
 ## Publicar no GitHub Pages
 
-1. Crie um repositório chamado `imagem-link` e envie **o conteúdo desta pasta** pra raiz dele
-   (os caminhos do `manifest.json` começam com `/imagem-link/`).
-2. *Settings → Pages → Deploy from a branch*, branch `main`, pasta `/ (root)`.
-3. No Owlbear: perfil → *Extensions* → **+** → `https://SEU-USUARIO.github.io/imagem-link/manifest.json`,
-   e ative na sala.
+A extensão mora na pasta `imagem-link` do repositório `mapas` (Pages ligado, branch `main`, pasta `/ (root)`).
+Os caminhos do `manifest.json` começam com `/mapas/imagem-link/`; se mudar de lugar, troque esses 4 caminhos.
+
+No Owlbear: perfil → *Extensions* → **+** → `https://zlobinh.github.io/mapas/imagem-link/manifest.json`,
+e ative na sala. As imagens podem ficar na raiz do mesmo repositório: `https://zlobinh.github.io/mapas/rally.webp`.
 
 ## Testar fora do Owlbear
 
-Na pasta `negocio`: `python -m http.server 8792` e abra `http://localhost:8792/imagem-link/tools/preview.html`.
+Na pasta do repositório `mapas`: `python -m http.server 8792` e abra
+`http://localhost:8792/imagem-link/tools/preview.html`.

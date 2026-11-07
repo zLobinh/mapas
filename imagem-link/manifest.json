@@ -1,15 +1,15 @@
 {
   "name": "Imagem por Link",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 1,
   "author": "Keven",
   "description": "Coloca no mapa imagens (e vídeos) por link, sem fazer upload: não gasta o armazenamento da conta.",
-  "icon": "/imagem-link/icon.svg",
-  "background_url": "/imagem-link/background.html?v=1.0.0",
+  "icon": "/mapas/imagem-link/icon.svg",
+  "background_url": "/mapas/imagem-link/background.html?v=1.0.1",
   "action": {
     "title": "Imagem por Link",
-    "icon": "/imagem-link/icon.svg",
-    "popover": "/imagem-link/index.html?v=1.0.0",
+    "icon": "/mapas/imagem-link/icon.svg",
+    "popover": "/mapas/imagem-link/index.html?v=1.0.1",
     "width": 380,
     "height": 600
   }
