@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Imagem por Link</title>
+    <script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm": "/imagem-link/tools/mock.js" } }</script>
+    <link rel="stylesheet" href="/imagem-link/style.css?v=1.0.0" />
+  </head>
+  <body>
+    <main id="app">
+      <h1 id="title">Imagem por Link</h1>
+      <p class="muted small">A imagem fica no site onde está hospedada: o Owlbear só guarda o link, sem gastar o seu armazenamento.</p>
+
+      <label class="field">
+        <span>Link da imagem ou vídeo</span>
+        <div class="row">
+          <input id="url" type="url" placeholder="https://..." autocomplete="off" />
+          <button id="paste" type="button" title="Colar">📋</button>
+        </div>
+      </label>
+      <div id="status" class="status muted small">Cole um link pra ver a prévia.</div>
+      <div id="preview" class="preview hidden"></div>
+
+      <label class="field">
+        <span>Nome</span>
+        <input id="name" type="text" placeholder="Mapa da corrida" />
+      </label>
+
+      <div class="field" id="layerField">
+        <span>Camada</span>
+        <div class="seg" id="layer">
+          <button type="button" data-v="MAP" class="on">Mapa</button>
+          <button type="button" data-v="PROP">Objeto</button>
+          <button type="button" data-v="CHARACTER">Personagem</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span>Tamanho</span>
+        <div class="grid2">
+          <label class="small">Quadrados de largura<input id="cells" type="number" min="0.1" step="0.5" /></label>
+          <label class="small">Pixels por quadrado na imagem<input id="ppc" type="number" min="1" step="1" /></label>
+        </div>
+        <div id="sizeInfo" class="muted small"></div>
+      </div>
+
+      <label class="check small"><input id="locked" type="checkbox" checked /> Travar no lugar (bom pra mapa)</label>
+
+      <div class="row actions">
+        <button id="add" class="primary" type="button" disabled>Colocar no centro da tela</button>
+      </div>
+
+      <details class="small">
+        <summary>Onde hospedar imagens pesadas</summary>
+        <ul>
+          <li><b>GitHub</b> (o mesmo esquema da PMP Fichas): crie um repositório, suba as imagens e ative o Pages.
+            O link fica <code>https://SEU-USUARIO.github.io/REPO/mapa.webp</code>. Até 100 MB por arquivo.
+            Link de arquivo do github.com (<code>/blob/</code>) é convertido sozinho.</li>
+          <li><b>Imgur</b>: use o link direto (<code>i.imgur.com/....png</code>).</li>
+          <li><b>Google Drive</b>: o arquivo precisa estar "qualquer pessoa com o link". O link de
+            compartilhamento é convertido sozinho, mas o Drive às vezes bloqueia; a prévia avisa.</li>
+          <li><b>Dropbox</b>: o link de compartilhamento é convertido sozinho.</li>
+          <li>Links do Discord expiram em poucas horas: não use.</li>
+          <li>Prefira <b>WEBP</b> ou <b>JPG</b>. Até ~8000 px de lado aparece em quase todo PC; acima de 16384 px
+            muitas placas de vídeo não mostram.</li>
+        </ul>
+      </details>
+    </main>
+    <script type="module" src="/imagem-link/app.js?v=1.0.0"></script>
+  </body>
+</html>
