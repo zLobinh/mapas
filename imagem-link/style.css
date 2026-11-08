@@ -44,3 +44,21 @@ summary { cursor: pointer; color: var(--muted); }
 ul { padding-left: 18px; margin: 6px 0 0; }
 li { margin-bottom: 5px; }
 code { font-size: 11px; background: var(--panel); padding: 0 3px; border-radius: 4px; word-break: break-all; }
+
+/* tabs between "Link" and "Pokémon" */
+.tabs { display: flex; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+.tabs a { flex: 1; text-align: center; padding: 9px 0; color: var(--muted); text-decoration: none; font-weight: 600; border-bottom: 2px solid transparent; }
+.tabs a.on { color: var(--text); border-bottom-color: var(--accent); }
+
+/* Pokémon tab */
+body.poke main { padding-top: 10px; }
+input[type="search"] { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; }
+.opts { margin: 8px 0 2px; gap: 8px; }
+.seg.mini button { padding: 3px 9px; font-size: 12px; }
+#count { margin: 6px 0; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.pcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 3px 4px; border-radius: 8px; background: var(--panel); }
+.pcard img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+.pcard span { font-size: 11px; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
+.pcard i { position: absolute; top: 3px; left: 5px; font-size: 9px; font-style: normal; color: var(--muted); }
+#more { width: 100%; margin-top: 8px; }

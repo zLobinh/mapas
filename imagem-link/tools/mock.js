@@ -14,7 +14,7 @@ const OBR = {
     },
   },
   viewport: { getWidth: async () => 1200, getHeight: async () => 800, inverseTransformPoint: async (p) => ({ x: p.x * 2, y: p.y * 2 }) },
-  player: { select: async () => {} },
+  player: { select: async () => {}, getSelection: async () => window.__sel ?? [] },
   notification: { show: async (m) => console.log("[notification]", m) },
   popover: { open: async () => {} },
   contextMenu: { create: () => {} },

@@ -16,6 +16,26 @@ os arquivos enviados pra ele; um item que aponta pra outro site não gasta nada.
 Serve pra trocar um mapa enviado por upload por um com link (depois apague o arquivo no seu armazenamento do
 Owlbear pra liberar espaço) ou pra mudar a fase do mapa da corrida sem mexer em nada.
 
+## Aba 🐾 Pokémon
+
+Todos os sprites da pasta `pokemon/` do repositório, com busca por nome, número da Pokédex (exato) ou forma
+("fêmea", "voando"...). Clique num Pokémon pra colocá-lo no centro da tela, na camada de personagens.
+
+- **Tamanho:** 1 a 4 quadrados, ou *Sprite* (proporcional ao desenho: 50 px do sprite = 1 quadrado, então Pokémon
+  grandes ficam maiores). A escolha fica salva no navegador.
+- **Trocar a imagem do token selecionado:** marque, selecione o token no mapa e clique no Pokémon novo. Muda só o
+  sprite, mantendo o tamanho, o nome e a ficha (bom pra evolução, forma ou fêmea/macho).
+
+Pra adicionar ou trocar sprites: junte tudo numa pasta (nomes no formato `0006_Charizard_voando.gif`) e rode, na
+pasta do repositório `mapas`:
+
+```bash
+python imagem-link/tools/montar_pokemon.py "C:/caminho/da/pasta"
+```
+
+Ele copia as imagens pra `pokemon/` com nomes sem acento e refaz o `pokemon/index.json`. Depois suba pelo
+GitHub Desktop.
+
 ## Onde hospedar
 
 O Owlbear desenha as imagens com a placa de vídeo, então o site precisa liberar a imagem pra outros sites (CORS).
