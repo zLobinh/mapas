@@ -4,6 +4,7 @@
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 
 const META = "com.imagem-link/meta";
+const PLACE = "com.imagem-link/place"; // handled by background.js
 const BASE = new URL("../pokemon/", import.meta.url); // <repository>/pokemon/
 const PAGE = 120; // thumbnails shown at a time
 const REAL_PPC = 50; // "Sprite" size: 50 sprite pixels per square
@@ -35,7 +36,7 @@ function more() {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "pcard";
-    b.title = `#${e.d} ${label(e)} — clique pra colocar no mapa`;
+    b.title = `#${e.d} ${label(e)} — clique e depois clique no mapa onde ele vai ficar (Ctrl+clique: centro da tela)`;
     const img = document.createElement("img");
     img.loading = "lazy";
     img.decoding = "async";
@@ -46,7 +47,7 @@ function more() {
     const num = document.createElement("i");
     num.textContent = `#${e.d}`;
     b.append(img, cap, num);
-    b.onclick = () => place(e, b);
+    b.onclick = (ev) => { state.center = ev.ctrlKey || ev.metaKey; place(e, b); };
     frag.append(b);
   }
   $("grid").append(frag);
@@ -89,7 +90,8 @@ async function place(e, button) {
         }
       });
       await OBR.notification.show(`${target.name} agora é ${label(e)}`);
-    } else {
+    } else if (state.center) {
+      // Ctrl+click: straight to the middle of the screen
       const item = buildImage(image, grid)
         .position(await viewCenter())
         .layer("CHARACTER")
@@ -98,6 +100,12 @@ async function place(e, button) {
         .build();
       await OBR.scene.items.addItems([item]);
       await OBR.player.select([item.id]);
+    } else {
+      // the token follows the mouse on the map; a click drops it (background.js)
+      await OBR.broadcast.sendMessage(PLACE, {
+        image, grid, cells: Math.max(e.w, e.h) / grid.dpi, name: label(e), layer: "CHARACTER",
+        metadata: { [META]: { url: image.url, pokemon: e.f } },
+      }, { destination: "LOCAL" });
     }
   } catch (err) {
     await OBR.notification.show(`Erro: ${err.message}`, "ERROR");

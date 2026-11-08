@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pokémon</title>
-    <link rel="stylesheet" href="style.css?v=1.1.0" />
+    <link rel="stylesheet" href="style.css?v=1.2.0" />
   </head>
   <body class="poke">
     <nav class="tabs">
-      <a href="index.html?v=1.1.0">🔗 Link</a>
-      <a href="pokemon.html?v=1.1.0" class="on">🐾 Pokémon</a>
+      <a href="index.html?v=1.2.0">🔗 Link</a>
+      <a href="pokemon.html?v=1.2.0" class="on">🐾 Pokémon</a>
     </nav>
     <main>
       <input id="q" type="search" placeholder="Buscar por nome, número ou forma (ex.: charizard, 25, fêmea)" autocomplete="off" />
@@ -24,10 +24,11 @@
         </div>
       </div>
       <label class="check small"><input id="swap" type="checkbox" /> Trocar a imagem do token selecionado (evolução, forma…)</label>
+      <div class="muted small">Clique num Pokémon e depois clique no mapa onde ele vai ficar. Shift no mapa = colocar vários; Esc cancela; Ctrl+clique aqui = centro da tela.</div>
       <div id="count" class="muted small"></div>
       <div id="grid" class="pgrid"></div>
       <button id="more" type="button" class="hidden">Mostrar mais</button>
     </main>
-    <script type="module" src="pokemon.js?v=1.1.0"></script>
+    <script type="module" src="pokemon.js?v=1.2.0"></script>
   </body>
 </html>
