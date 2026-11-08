@@ -8,6 +8,14 @@ const META = `${ID}/meta`;
 const $ = (id) => document.getElementById(id);
 const editId = new URLSearchParams(location.search).get("id");
 
+// the tabs open the other page in this same popover: they must keep Owlbear's connection
+// parameters (?obrref=...), or the other page loads but can't talk to the room
+for (const a of document.querySelectorAll(".tabs a")) {
+  const params = new URLSearchParams(location.search);
+  params.delete("id"); // "Trocar link" edits one image; the tabs open the normal pages
+  a.href = `${a.getAttribute("href").split("?")[0]}?${params}`;
+}
+
 const state = { url: "", media: null, layer: "MAP", sceneDpi: 150, editing: null };
 
 // share links -> direct file links
@@ -86,8 +94,8 @@ function syncSize(from) {
   }
   const ppc = Number($("ppc").value) || m.width;
   const big = Math.max(m.width, m.height);
-  const warn = big > 16384 ? " · ⚠ mais de 16384 px: muitas placas de vídeo não mostram"
-    : big > 8192 ? " · ⚠ mais de 8192 px: pode não aparecer em PC fraco/celular" : "";
+  const warn = big > 16384 ? " · mais de 16384 px: muitas placas de vídeo não mostram"
+    : big > 8192 ? " · mais de 8192 px: pode não aparecer em PC fraco/celular" : "";
   $("sizeInfo").textContent = `Imagem ${m.width} × ${m.height} px → ${r2(m.width / ppc)} × ${r2(m.height / ppc)} quadrados${warn}`;
 }
 
@@ -121,7 +129,7 @@ async function check() {
   if (state.editing) $("cells").value = r2(state.editing.cellsWide);
   else if (!$("ppc").value && !$("cells").value) $("ppc").value = state.sceneDpi;
   syncSize($("cells").value && state.editing ? "cells" : "ppc");
-  setStatus(r.video ? "Vídeo OK ✓ (o Owlbear toca em loop)" : "Imagem OK ✓", "ok");
+  setStatus(r.video ? "Vídeo OK (o Owlbear toca em loop)" : "Imagem OK", "ok");
   $("add").disabled = false;
 }
 
@@ -157,7 +165,7 @@ async function add() {
           it.metadata[META] = { url: state.url };
         }
       });
-      setStatus("Link trocado ✓", "ok");
+      setStatus("Link trocado", "ok");
       await OBR.notification.show("Imagem atualizada pelo link");
     } else {
       const item = buildImage(image, grid)
@@ -169,7 +177,7 @@ async function add() {
         .build();
       await OBR.scene.items.addItems([item]);
       await OBR.player.select([item.id]);
-      setStatus("Colocado no mapa ✓ (no centro da tela)", "ok");
+      setStatus("Colocado no mapa (no centro da tela)", "ok");
     }
   } catch (e) {
     setStatus(`Erro: ${e.message}`, "bad");

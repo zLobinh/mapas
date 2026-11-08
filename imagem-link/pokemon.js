@@ -12,6 +12,14 @@ const $ = (id) => document.getElementById(id);
 const SIZE_KEY = "imagem-link/size";
 
 const state = { all: [], list: [], shown: 0, size: "1", ready: false };
+
+// the tabs must keep Owlbear's connection parameters (?obrref=...): without them this page loads
+// but can't talk to the room, and clicking a Pokémon did nothing
+for (const a of document.querySelectorAll(".tabs a")) {
+  const params = new URLSearchParams(location.search);
+  params.delete("id");
+  a.href = `${a.getAttribute("href").split("?")[0]}?${params}`;
+}
 const fold = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const label = (e) => (e.v ? `${e.n} (${e.v})` : e.n);
 const urlOf = (e) => new URL(encodeURIComponent(e.f), BASE).href;
@@ -69,7 +77,11 @@ async function viewCenter() {
 }
 
 async function place(e, button) {
-  if (!state.ready) return;
+  if (!state.ready) {
+    $("count").textContent = "Esta janela não está conectada ao Owlbear. Feche a extensão e abra de novo (ou recarregue a página com F5).";
+    $("count").className = "status small bad";
+    return;
+  }
   button.disabled = true;
   try {
     const image = { url: urlOf(e), mime: mimeOf(e.f), width: e.w, height: e.h };
