@@ -62,3 +62,5 @@ input[type="search"] { width: 100%; padding: 8px 10px; border-radius: 8px; borde
 .pcard span { font-size: 11px; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
 .pcard i { position: absolute; top: 3px; left: 5px; font-size: 9px; font-style: normal; color: var(--muted); }
 #more { width: 100%; margin-top: 8px; }
+
+.credit { margin-top: 16px; text-align: center; font-size: 11px; color: var(--muted); }

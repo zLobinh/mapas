@@ -7,7 +7,7 @@
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 
 const ID = "com.imagem-link";
-const VERSION = "1.2.1";
+const VERSION = "1.2.2";
 export const PLACE = `${ID}/place`;
 const TOOL = `${ID}/place-tool`;
 const MODE = `${ID}/place-mode`;

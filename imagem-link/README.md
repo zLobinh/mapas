@@ -3,7 +3,17 @@
 Coloca no mapa imagens e vídeos **por link**, sem fazer upload pro Owlbear. O Owlbear só conta no limite da conta
 os arquivos enviados pra ele; um item que aponta pra outro site não gasta nada.
 
-## Como usar
+Criado por: Lobynh
+
+## Instalar
+
+No Owlbear: perfil → *Extensions* → **+** → cole o link abaixo e depois ative a extensão na sala.
+
+```
+https://zlobinh.github.io/mapas/imagem-link/manifest.json
+```
+
+## Aba Link
 
 1. Clique no ícone da extensão (no topo da sala).
 2. Cole o link da imagem (ou vídeo `.webm`/`.mp4`, que toca em loop). A prévia avisa se o link funciona.
@@ -13,37 +23,30 @@ os arquivos enviados pra ele; um item que aponta pra outro site não gasta nada.
 4. *Colocar no centro da tela*. Mapa já entra travado (dá pra destravar no menu do Owlbear).
 
 **Trocar link da imagem** (botão direito numa imagem, só o mestre): troca o arquivo mantendo o tamanho no mapa.
-Serve pra trocar um mapa enviado por upload por um com link (depois apague o arquivo no seu armazenamento do
-Owlbear pra liberar espaço) ou pra mudar a fase do mapa da corrida sem mexer em nada.
+Serve pra trocar um mapa enviado por upload por um com link (depois apague o arquivo do armazenamento do Owlbear
+pra liberar espaço) ou pra trocar a versão de um mapa sem mexer em mais nada.
 
-## Aba 🐾 Pokémon
+## Aba Pokémon
 
-Todos os sprites da pasta `pokemon/` do repositório, com busca por nome, número da Pokédex (exato) ou forma
-("fêmea", "voando"...). Clique num Pokémon pra colocá-lo no centro da tela, na camada de personagens.
+Quase 2000 sprites animados de Pokémon, incluindo Mega Evoluções e formas Primal, com busca por nome, número da
+Pokédex (exato) ou forma ("fêmea", "voando", "mega", "primal"...).
 
-- **Tamanho:** 1 a 4 quadrados, ou *Sprite* (proporcional ao desenho: 50 px do sprite = 1 quadrado, então Pokémon
-  grandes ficam maiores). A escolha fica salva no navegador.
+- **Colocar:** clique num Pokémon e depois clique no mapa onde ele vai ficar (ele segue o mouse e encaixa no
+  quadrado). Segure **Shift** no mapa pra colocar vários; **Esc** cancela; **Ctrl+clique** no Pokémon coloca
+  direto no centro da tela.
+- **Tamanho:** 1 a 4 quadrados, ou *Sprite* (proporcional ao desenho, então Pokémon grandes ficam maiores).
+  A escolha fica salva no navegador.
 - **Trocar a imagem do token selecionado:** marque, selecione o token no mapa e clique no Pokémon novo. Muda só o
-  sprite, mantendo o tamanho, o nome e a ficha (bom pra evolução, forma ou fêmea/macho).
+  sprite, mantendo tamanho, nome e o resto do token (bom pra evolução, forma ou fêmea/macho).
 
-Pra adicionar ou trocar sprites: junte tudo numa pasta (nomes no formato `0006_Charizard_voando.gif`) e rode, na
-pasta do repositório `mapas`:
-
-```bash
-python imagem-link/tools/montar_pokemon.py "C:/caminho/da/pasta"
-```
-
-Ele copia as imagens pra `pokemon/` com nomes sem acento e refaz o `pokemon/index.json`. Depois suba pelo
-GitHub Desktop.
-
-## Onde hospedar
+## Onde hospedar imagens pesadas
 
 O Owlbear desenha as imagens com a placa de vídeo, então o site precisa liberar a imagem pra outros sites (CORS).
-A prévia testa isso.
+A prévia da extensão testa isso.
 
-- **GitHub** (recomendado, mesmo esquema da PMP Fichas): crie um repositório (ex.: `mapas`), suba as imagens e ative
-  o Pages. Link: `https://SEU-USUARIO.github.io/mapas/rally.webp`. Até 100 MB por arquivo e 1 GB por site.
-  Link de arquivo do github.com (`.../blob/main/...`) é convertido sozinho.
+- **GitHub Pages** (grátis): crie um repositório público, suba as imagens e ative o Pages em
+  *Settings → Pages*. Link: `https://seu-usuario.github.io/repositorio/mapa.webp`. Até 100 MB por arquivo e
+  1 GB por site. Link de arquivo do github.com (`.../blob/main/...`) é convertido sozinho.
 - **Imgur**: link direto `i.imgur.com/...` (link da página é convertido).
 - **Google Drive**: compartilhado como "qualquer pessoa com o link"; o link é convertido, mas o Drive às vezes
   bloqueia arquivos grandes.
@@ -51,17 +54,22 @@ A prévia testa isso.
 - **Discord**: não use, os links expiram.
 
 Prefira WEBP ou JPG. Até ~8000 px de lado aparece em quase todo PC; acima de 16384 px muitas placas de vídeo não
-mostram (a extensão avisa). Um mapa de rally comprido pode ser dividido em pedaços colocados lado a lado.
+mostram (a extensão avisa). Um mapa muito comprido pode ser dividido em pedaços colocados lado a lado.
 
-## Publicar no GitHub Pages
+## Para quem mantém a extensão
 
-A extensão mora na pasta `imagem-link` do repositório `mapas` (Pages ligado, branch `main`, pasta `/ (root)`).
-Os caminhos do `manifest.json` começam com `/mapas/imagem-link/`; se mudar de lugar, troque esses 4 caminhos.
+- Os caminhos do `manifest.json` começam com `/mapas/imagem-link/` (repositório `mapas`, pasta `imagem-link`).
+  Se a extensão mudar de lugar, troque esses 4 caminhos.
+- Os sprites ficam na pasta `pokemon/` da raiz do repositório. Pra adicionar ou trocar, junte tudo numa pasta
+  (nomes no formato `0006_Charizard_voando.gif`) e rode na raiz do repositório:
 
-No Owlbear: perfil → *Extensions* → **+** → `https://zlobinh.github.io/mapas/imagem-link/manifest.json`,
-e ative na sala. As imagens podem ficar na raiz do mesmo repositório: `https://zlobinh.github.io/mapas/rally.webp`.
+  ```bash
+  python imagem-link/tools/montar_pokemon.py "Pokémons" "Mega=Megas" "Mega+=Megas/Estáticos/Refeitos" "Mega+=Megas/Estáticos"
+  ```
 
-## Testar fora do Owlbear
-
-Na pasta do repositório `mapas`: `python -m http.server 8792` e abra
-`http://localhost:8792/imagem-link/tools/preview.html`.
+  Ele copia as imagens pra `pokemon/` com nomes sem acento e refaz o `pokemon/index.json`. `Mega=` dá o nome
+  "Mega ..." ("Primal ..." pro Kyogre e o Groudon); `Mega+=` é reserva, só entra quem ainda não tem imagem de Mega
+  (assim os GIFs têm prioridade e os estáticos completam o que faltar). Passe sempre todas as pastas: o que não
+  vier de nenhuma é apagado de `pokemon/`.
+- Testar fora do Owlbear: na raiz do repositório, `python -m http.server 8792` e abra
+  `http://localhost:8792/imagem-link/tools/preview.html`.
