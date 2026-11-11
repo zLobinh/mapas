@@ -100,15 +100,19 @@ def main():
         have |= added_here
         print(f"{src}: {sum(1 for g in added_here)} Pokémon")
     # images in pokemon/ that didn't come from any folder
+    # (the "forma_" ones come from montar_formas.py: they stay, with their index entries)
+    index_file = OUT / "index.json"
+    if index_file.exists():
+        entries += [e for e in json.loads(index_file.read_text(encoding="utf-8")) if e["f"].startswith("forma_") and (OUT / e["f"]).exists()]
     for old in OUT.iterdir():
-        if old.suffix.lower() in EXTS and old.name.lower() not in used:
+        if old.suffix.lower() in EXTS and old.name.lower() not in used and not old.name.startswith("forma_"):
             old.unlink()
     # normal forms first, then Megas, inside each number
     # (variations in number order: 2 before 10)
     natural = lambda s: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]
     entries.sort(key=lambda e: (e["d"], e["f"].startswith("mega_"), e["n"], natural(e["v"])))
     (OUT / "index.json").write_text(json.dumps(entries, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    total = sum((OUT / e["f"]).stat().st_size for e in entries)
+    total = sum((OUT / e["f"]).stat().st_size for e in entries if (OUT / e["f"]).exists())
     print(f"{len(entries)} imagens em {OUT} ({total / 1048576:.1f} MB)")
 
 

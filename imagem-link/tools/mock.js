@@ -35,7 +35,7 @@ const OBR = {
   player: { select: async (ids) => { window.__sel = ids; }, getSelection: async () => window.__sel ?? [] },
   notification: { show: async (m) => console.log("[notification]", m) },
   popover: { open: async () => {} },
-  contextMenu: { create: () => {} },
+  contextMenu: { create: (m) => { (window.__menus ??= {})[m.id] = m; } },
   broadcast: {
     sendMessage: async (ch, data) => { setTimeout(() => (channels[ch] ?? []).forEach((f) => f({ data: structuredClone(data) })), 0); },
     onMessage: (ch, f) => { (channels[ch] ??= []).push(f); return () => {}; },

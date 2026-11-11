@@ -39,6 +39,28 @@ Pokédex (exato) ou forma ("fêmea", "voando", "mega", "primal"...).
 - **Trocar a imagem do token selecionado:** marque, selecione o token no mapa e clique no Pokémon novo. Muda só o
   sprite, mantendo tamanho, nome e o resto do token (bom pra evolução, forma ou fêmea/macho).
 
+## Aba Carros (tokens com vários ângulos)
+
+Veículos (ou qualquer modelo 3D) que entram no mapa já com todos os ângulos:
+
+- **Colocar:** clique no carro e depois no mapa (Shift: vários; Esc cancela). O tamanho é o comprimento em quadrados.
+- **Girar:** botão direito no token → **Girar pra direita (E)** / **Girar pra esquerda (Q)**. Com o token
+  selecionado, as teclas E e Q também giram. Funciona em qualquer token com variantes do
+  [Changr](https://extensions.owlbear.rodeo/changr) ("Change Image"), e os ângulos aparecem no menu dele também.
+- Os ângulos ficam no token no formato do Changr (`com.missing-link-dev.changr/metadata` → `imageOptions`).
+
+Cada carro é uma pasta `carros/<nome>/` do repositório com um PNG transparente por ângulo, na ordem do sentido
+horário, e um `carro.json`:
+
+```json
+{ "nome": "Carro", "pasta": "carro", "largura": 512, "altura": 300, "angulos": ["carro_1.png", "carro_2.png"] }
+```
+
+O jeito fácil de gerar é o botão **Pacote Owlbear** do visualizador isométrico do Sketchfab: ele gira o modelo,
+tira 8 (ou 4) prints na mesma escala, recorta o fundo e salva tudo em `Downloads/carros/<nome>/`. Copie essa pasta
+pra `carros/` do repositório e publique; a aba lista as pastas sozinha (pela API do GitHub) ou por um
+`carros/index.json` opcional (`["pasta1", "pasta2"]`).
+
 ## Onde hospedar imagens pesadas
 
 O Owlbear desenha as imagens com a placa de vídeo, então o site precisa liberar a imagem pra outros sites (CORS).

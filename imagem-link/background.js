@@ -7,7 +7,28 @@
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 
 const ID = "com.imagem-link";
-const VERSION = "1.2.2";
+const VERSION = "1.3.0";
+const CHANGR = "com.missing-link-dev.changr/metadata";
+
+// "Girar": the next (or previous) image of the token's Changr image options. The car packs list
+// their angles clockwise, so +1 turns the car to the right. Works on any token with Changr variants.
+async function cycleImage(ids, step) {
+  await OBR.scene.items.updateItems(ids, (items) => {
+    for (const it of items) {
+      const opts = it.metadata?.[CHANGR]?.imageOptions;
+      if (!Array.isArray(opts) || opts.length < 2 || !it.image) continue;
+      const cur = Math.max(0, opts.findIndex((o) => o.url === it.image.url));
+      const o = opts[(cur + step + opts.length) % opts.length];
+      it.image.url = o.url;
+      it.image.width = o.width;
+      it.image.height = o.height;
+      if (o.mime) it.image.mime = o.mime;
+      if (o.dpi !== undefined || o.offset) {
+        it.grid = { ...(it.grid ?? {}), ...(o.dpi !== undefined ? { dpi: o.dpi } : {}), ...(o.offset ? { offset: { ...o.offset } } : {}) };
+      }
+    }
+  });
+}
 export const PLACE = `${ID}/place`;
 const TOOL = `${ID}/place-tool`;
 const MODE = `${ID}/place-mode`;
@@ -101,6 +122,21 @@ OBR.onReady(() => {
       height: 560,
       anchorElementId: elementId,
     }),
+  });
+
+  // right click on a token with variants: turn it (players can turn the tokens they can move)
+  const hasVariants = { key: ["metadata", CHANGR], value: undefined, operator: "!=" };
+  OBR.contextMenu.create({
+    id: `${ID}/turn-right`,
+    shortcut: "E",
+    icons: [{ icon: asset("turn-right.svg"), label: "Girar pra direita (E)", filter: { every: [{ key: "type", value: "IMAGE" }, hasVariants] } }],
+    onClick: (context) => cycleImage(context.items.map((i) => i.id), 1),
+  });
+  OBR.contextMenu.create({
+    id: `${ID}/turn-left`,
+    shortcut: "Q",
+    icons: [{ icon: asset("turn-left.svg"), label: "Girar pra esquerda (Q)", filter: { every: [{ key: "type", value: "IMAGE" }, hasVariants] } }],
+    onClick: (context) => cycleImage(context.items.map((i) => i.id), -1),
   });
 
   OBR.broadcast.onMessage(PLACE, ({ data }) => {

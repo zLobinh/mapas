@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Carros</title>
+    <script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm": "./mock.js" } }</script>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body class="poke">
+    <nav class="tabs">
+      <a href="preview.html">Link</a>
+      <a href="preview-pokemon.html">Pokémon</a>
+      <a href="preview-carros.html" class="on">Carros</a>
+    </nav>
+    <main>
+      <input id="q" type="search" placeholder="Buscar carro pelo nome" autocomplete="off" />
+      <div class="row small opts">
+        <span class="muted">Comprimento:</span>
+        <div class="seg mini" id="size">
+          <button type="button" data-v="1">1</button>
+          <button type="button" data-v="2" class="on">2</button>
+          <button type="button" data-v="3">3</button>
+          <button type="button" data-v="4">4</button>
+        </div>
+        <span class="muted">quadrados</span>
+      </div>
+      <div class="muted small">Clique num carro e depois clique no mapa onde ele vai ficar (Shift: vários; Esc cancela).
+        Ele entra com todos os ângulos: botão direito no carro &rarr; <b>Girar</b>, ou "Change Image" do Changr.</div>
+      <div id="count" class="muted small"></div>
+      <div id="grid" class="pgrid cars"></div>
+      <button id="reload" type="button">Atualizar a lista</button>
+      <footer class="credit">Criado por: Lobynh</footer>
+    </main>
+    <script type="module" src="../carros.js"></script>
+  </body>
+</html>
