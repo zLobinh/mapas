@@ -61,6 +61,19 @@ tira 8 (ou 4) prints na mesma escala, recorta o fundo e salva tudo em `Downloads
 pra `carros/` do repositório e publique; a aba lista as pastas sozinha (pela API do GitHub) ou por um
 `carros/index.json` opcional (`["pasta1", "pasta2"]`).
 
+### Carro direto do PC (sem GitHub)
+
+- **＋ Carro do PC:** escolha a pasta que o Pacote Owlbear salvou (`Downloads/carros/<nome>/`). As imagens vão pro
+  armazenamento da sua conta do Owlbear (aparece a janela de envio dele) e em seguida o seletor de imagens do
+  Owlbear abre já buscando pelo nome do carro: marque todos os ângulos e confirme. O carro fica salvo **na sala**
+  (todo mundo dela vê na lista, marcado "· sala") e entra no mapa com todos os ângulos, como os do repositório.
+  A ordem dos ângulos segue o `carro.json` da pasta (sem ele, a ordem dos nomes dos arquivos).
+- **＋ Carro com imagens do Owlbear:** pra imagens que já estão no seu Owlbear: marque os ângulos (na ordem dos
+  nomes) e o carro é montado com eles.
+- **✕** no cartão (dois cliques) tira o carro da lista da sala; as imagens continuam no armazenamento do Owlbear.
+- Diferente dos carros do repositório, esses **gastam o armazenamento da conta** (uns 200 KB por ângulo), e a
+  lista da sala tem espaço pra uns 10 carros de 8 ângulos.
+
 ## Onde hospedar imagens pesadas
 
 O Owlbear desenha as imagens com a placa de vídeo, então o site precisa liberar a imagem pra outros sites (CORS).

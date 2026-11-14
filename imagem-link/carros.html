@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Carros</title>
-    <link rel="stylesheet" href="style.css?v=1.3.0" />
+    <link rel="stylesheet" href="style.css?v=1.4.0" />
   </head>
   <body class="poke">
     <nav class="tabs">
-      <a href="index.html?v=1.3.0">Link</a>
-      <a href="pokemon.html?v=1.3.0">Pokémon</a>
-      <a href="carros.html?v=1.3.0" class="on">Carros</a>
+      <a href="index.html?v=1.4.0">Link</a>
+      <a href="pokemon.html?v=1.4.0">Pokémon</a>
+      <a href="carros.html?v=1.4.0" class="on">Carros</a>
     </nav>
     <main>
       <input id="q" type="search" placeholder="Buscar carro pelo nome" autocomplete="off" />
@@ -26,11 +26,16 @@
       </div>
       <div class="muted small">Clique num carro e depois clique no mapa onde ele vai ficar (Shift: vários; Esc cancela).
         Ele entra com todos os ângulos: botão direito no carro &rarr; <b>Girar</b>, ou "Change Image" do Changr.</div>
+      <div class="row small" style="gap:6px;flex-wrap:wrap;margin:6px 0">
+        <button id="fromPC" type="button" title="Escolha a pasta que o botão Pacote Owlbear salvou (Downloads/carros/nome). As imagens vão pro armazenamento do seu Owlbear e o carro fica salvo nesta sala.">＋ Carro do PC</button>
+        <button id="fromOwlbear" type="button" title="Monta um carro com imagens que já estão no seu Owlbear (escolha todos os ângulos)">＋ Carro com imagens do Owlbear</button>
+        <input id="folder" type="file" webkitdirectory multiple hidden />
+      </div>
       <div id="count" class="muted small"></div>
       <div id="grid" class="pgrid cars"></div>
       <button id="reload" type="button">Atualizar a lista</button>
       <footer class="credit">Criado por: Lobynh</footer>
     </main>
-    <script type="module" src="carros.js?v=1.3.0"></script>
+    <script type="module" src="carros.js?v=1.4.0"></script>
   </body>
 </html>
