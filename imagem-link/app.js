@@ -1,7 +1,11 @@
 // "Imagem por Link": puts an image (or video) item on the map that points to a link on another site.
 // Owlbear only counts the files uploaded to it against the account's storage; an item that points
 // somewhere else costs nothing. The page also edits the link of an image it placed (?id=...).
+//
+// "Enviar do PC" (or drag / paste a picture): the file goes to this repository through the GitHub API, in
+// imagens/<mapas|objetos|tokens>/, and the item points to it (see gh.js; the key stays in this browser).
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
+import { OWNER, REPO, token, gh, base64, slug, fold, commitTree, listDir, blobEntry, removeEntry, rawUrl, pagesUrl, wireKeyBox, needKey } from "./gh.js?v=1.6.0";
 
 export const ID = "com.imagem-link";
 const META = `${ID}/meta`;
@@ -101,15 +105,15 @@ function syncSize(from) {
 
 let probeToken = 0;
 async function check() {
-  const raw = $("url").value;
-  const url = directLink(raw);
+  const raw = state.file ? state.fileUrl : $("url").value;
+  const url = state.file ? raw : directLink(raw);
   state.url = url;
   state.media = null;
   $("add").disabled = true;
   $("preview").classList.add("hidden");
-  if (!url) { setStatus("Cole um link pra ver a prévia."); return syncSize(); }
-  if (!/^https:\/\//i.test(url)) { setStatus("O link precisa começar com https://", "bad"); return syncSize(); }
-  if (url !== raw.trim()) setStatus("Link convertido pro arquivo direto. Carregando…");
+  if (!url) { setStatus("Cole um link ou envie do PC pra ver a prévia."); return syncSize(); }
+  if (!state.file && !/^https:\/\//i.test(url)) { setStatus("O link precisa começar com https://", "bad"); return syncSize(); }
+  if (!state.file && url !== raw.trim()) setStatus("Link convertido pro arquivo direto. Carregando…");
   else setStatus("Carregando…");
   const token = ++probeToken;
   const r = await probe(url);
@@ -124,12 +128,13 @@ async function check() {
     return syncSize();
   }
   state.media = { width: r.width, height: r.height, video: r.video };
-  if (!$("name").value) $("name").value = decodeURIComponent(url.split(/[?#]/)[0].split("/").pop() || "").replace(/\.[a-z0-9]+$/i, "").slice(0, 60);
+  if (!$("name").value) $("name").value = decodeURIComponent((state.file?.name ?? url.split(/[?#]/)[0].split("/").pop()) || "").replace(/\.[a-z0-9]+$/i, "").slice(0, 60);
   // a fresh link starts at 1 image pixel = 1 scene pixel; when editing, keeps the size on the map
   if (state.editing) $("cells").value = r2(state.editing.cellsWide);
   else if (!$("ppc").value && !$("cells").value) $("ppc").value = state.sceneDpi;
   syncSize($("cells").value && state.editing ? "cells" : "ppc");
-  setStatus(r.video ? "Vídeo OK (o Owlbear toca em loop)" : "Imagem OK", "ok");
+  setStatus(state.file ? `${r.video ? "Vídeo" : "Imagem"} do PC: vai pro GitHub quando você colocar no mapa`
+    : r.video ? "Vídeo OK (o Owlbear toca em loop)" : "Imagem OK", "ok");
   $("add").disabled = false;
 }
 
@@ -150,8 +155,15 @@ async function add() {
   if (!m) return;
   const ppc = Number($("ppc").value);
   if (!(ppc > 0)) return setStatus("Defina o tamanho.", "bad");
+  if (state.file && !needKey((t) => setStatus(t, "warn"))) return;
   $("add").disabled = true;
   try {
+    // a file from the PC goes to GitHub first; the item points to it
+    if (state.file) {
+      const up = await uploadFile();
+      clearFile(false);
+      $("url").value = state.url = up.url;
+    }
     const image = { url: state.url, mime: mimeOf(state.url), width: m.width, height: m.height };
     // grid.dpi = image pixels per square; offset = the image's center goes on the position
     const grid = { dpi: ppc, offset: { x: m.width / 2, y: m.height / 2 } };
@@ -183,7 +195,187 @@ async function add() {
     setStatus(`Erro: ${e.message}`, "bad");
   } finally {
     $("add").disabled = false;
+    addLabel();
   }
+}
+
+// ---------------------------------------------------------------- files from the PC -> GitHub
+const TIPOS = { MAP: "mapas", PROP: "objetos", CHARACTER: "tokens" };
+const LAYER_OF = { mapas: "MAP", objetos: "PROP", tokens: "CHARACTER" };
+const TIPO_NOME = { mapas: "Mapa", objetos: "Objeto", tokens: "Token" };
+const mb = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`);
+const extOf = (name) => (name.match(/\.([a-z0-9]+)$/i)?.[1] ?? "").toLowerCase();
+const CONVERTIBLE = /^image\/(png|jpeg|bmp)$/;
+const MAX_UPLOAD = 95 * 1048576; // (GitHub refuses files over 100 MB)
+
+function addLabel() {
+  $("add").textContent = state.editing ? (state.file ? "Enviar pro GitHub e trocar a imagem" : "Trocar a imagem")
+    : state.file ? "Enviar pro GitHub e colocar no centro" : "Colocar no centro da tela";
+}
+
+function setFile(file) {
+  if (!file) return;
+  if (!/^(image|video)\//.test(file.type)) { setStatus("Esse arquivo não é imagem nem vídeo.", "bad"); return; }
+  clearFile(false);
+  state.file = file;
+  state.fileUrl = URL.createObjectURL(file);
+  $("url").value = "";
+  $("name").value = "";
+  if (!state.editing) $("cells").value = $("ppc").value = "";
+  const convertible = CONVERTIBLE.test(file.type);
+  $("webpRow").classList.toggle("hidden", !convertible);
+  $("webp").checked = convertible && file.size > 1048576;
+  $("fileInfo").textContent = `${file.name} · ${mb(file.size)}`;
+  $("fileBox").classList.remove("hidden");
+  addLabel();
+  check();
+}
+function clearFile(recheck = true) {
+  if (state.fileUrl) URL.revokeObjectURL(state.fileUrl);
+  state.file = state.fileUrl = null;
+  $("fileBox").classList.add("hidden");
+  addLabel();
+  if (recheck) check();
+}
+
+// a lighter copy (WEBP keeps transparency); null when it can't or isn't lighter
+async function toWebp(file) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const c = new OffscreenCanvas(bmp.width, bmp.height);
+    c.getContext("2d").drawImage(bmp, 0, 0);
+    bmp.close?.();
+    const out = await c.convertToBlob({ type: "image/webp", quality: 0.9 });
+    return out.type === "image/webp" && out.size < file.size ? out : null;
+  } catch { return null; }
+}
+
+// -> { url, path }: one commit with the file in imagens/<tipo>/<name>.<ext> (a number when the name exists)
+async function uploadFile() {
+  let blob = state.file, ext = extOf(state.file.name) || (state.file.type.split("/")[1] ?? "png");
+  if ($("webp").checked && !$("webpRow").classList.contains("hidden")) {
+    setStatus("Convertendo pra WEBP…");
+    const w = await toWebp(blob);
+    if (w) { setStatus(`WEBP: ${mb(blob.size)} → ${mb(w.size)}`); blob = w; ext = "webp"; }
+  }
+  if (blob.size > MAX_UPLOAD) throw new Error(`o arquivo tem ${mb(blob.size)}; o GitHub aceita até 100 MB (tente o WEBP ou JPG)`);
+  const tipo = TIPOS[state.editing?.layer ?? state.layer] ?? "objetos";
+  const nome = $("name").value.trim() || state.file.name.replace(/\.[a-z0-9]+$/i, "");
+  const base = slug(nome);
+  setStatus(`Enviando ${mb(blob.size)} pro GitHub…`);
+  const content = await base64(blob);
+  let path;
+  const sha = await commitTree(`${TIPO_NOME[tipo]}: ${nome}`, async (rootSha) => {
+    const have = new Set((await listDir(rootSha, `imagens/${tipo}`)).map((x) => x.path.toLowerCase()));
+    let f = `${base}.${ext}`;
+    for (let n = 2; have.has(f); n++) f = `${base}-${n}.${ext}`;
+    path = `imagens/${tipo}/${f}`;
+    const b = await gh("/git/blobs", { content, encoding: "base64" });
+    return [blobEntry(path, b.sha)];
+  }, (t) => setStatus(t, "warn"));
+  // usable right away from that exact commit; GitHub Pages takes a minute or two
+  const url = rawUrl(sha, path);
+  lib.fresh.set(path, { url, size: blob.size });
+  lib.gone.delete(path);
+  if ($("libBox").open) loadLibrary();
+  return { url, path };
+}
+
+// ---------------------------------------------------------------- the files already sent (imagens/...)
+const lib = { items: [], fresh: new Map(), gone: new Set(), loaded: false };
+const urlOfLib = (it) => lib.fresh.get(it.path)?.url ?? pagesUrl(it.path);
+
+async function loadLibrary() {
+  $("libInfo").textContent = "Carregando…";
+  const items = [];
+  try {
+    const auth = token() ? { headers: { Authorization: `Bearer ${token()}` } } : {};
+    for (const tipo of Object.values(TIPOS)) {
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/imagens/${tipo}`;
+      let r = await fetch(url, { cache: "no-store", ...auth });
+      if (r.status === 401) r = await fetch(url, { cache: "no-store" });
+      if (r.status === 404) continue;
+      if (!r.ok) throw new Error(`GitHub respondeu ${r.status}${r.status === 403 ? " (limite de consultas; salve a chave ou tente daqui a pouco)" : ""}`);
+      for (const x of await r.json()) if (x.type === "file") items.push({ name: x.name, path: x.path, size: x.size, tipo });
+    }
+  } catch (err) {
+    $("libInfo").textContent = `Não consegui listar: ${err.message}`;
+    return;
+  }
+  // just sent (the listing may not have it yet) / just deleted (may still be listed)
+  for (const [path, f] of lib.fresh) {
+    if (!items.some((i) => i.path === path)) items.push({ name: path.split("/").pop(), path, size: f.size, tipo: path.split("/")[1] });
+  }
+  lib.items = items.filter((i) => !lib.gone.has(i.path)).sort((a, b) => a.tipo.localeCompare(b.tipo) || a.name.localeCompare(b.name));
+  lib.loaded = true;
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const words = fold($("libQ").value).split(/\s+/).filter(Boolean);
+  const list = lib.items.filter((i) => words.every((w) => fold(`${i.name} ${TIPO_NOME[i.tipo]}`).includes(w)));
+  $("libInfo").textContent = lib.items.length ? `${list.length} arquivo(s)` : "Nada enviado ainda. Use \"Enviar do PC\".";
+  const rows = list.map((it) => {
+    const row = document.createElement("div");
+    row.className = "librow";
+    const pic = document.createElement("div");
+    pic.className = "libpic";
+    // (thumbnails only for light files: a 50 MB map isn't downloaded just to show a tiny picture)
+    if (it.size < 1.5 * 1048576 && !/\.(webm|mp4|m4v|mov)$/i.test(it.name)) {
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.src = urlOfLib(it);
+      pic.append(img);
+    } else pic.textContent = extOf(it.name).toUpperCase();
+    const txt = document.createElement("div");
+    txt.className = "libtxt";
+    const b = document.createElement("b");
+    b.textContent = it.name;
+    const s = document.createElement("span");
+    s.className = "muted";
+    s.textContent = `${TIPO_NOME[it.tipo] ?? it.tipo} · ${mb(it.size)}`;
+    txt.append(b, s);
+    const use = document.createElement("button");
+    use.type = "button";
+    use.textContent = "Usar";
+    use.title = "Põe o link no campo acima (depois é só colocar no mapa)";
+    use.onclick = () => {
+      clearFile(false);
+      if (!state.editing && LAYER_OF[it.tipo]) selectedLayer(LAYER_OF[it.tipo]);
+      $("url").value = urlOfLib(it);
+      $("name").value = it.name.replace(/\.[a-z0-9]+$/i, "");
+      if (!state.editing) $("cells").value = $("ppc").value = "";
+      check();
+      $("app").scrollIntoView({ behavior: "smooth" });
+    };
+    row.append(pic, txt, use);
+    if (token()) {
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "libdel";
+      del.textContent = "✕";
+      del.title = "Apagar do GitHub (some de todos os mapas que usam essa imagem)";
+      del.onclick = async () => {
+        if (del.dataset.sure !== "1") { del.dataset.sure = "1"; del.textContent = "apagar?"; setTimeout(() => { if (del.isConnected) { del.dataset.sure = ""; del.textContent = "✕"; } }, 3000); return; }
+        del.disabled = true;
+        try {
+          $("libInfo").textContent = `Apagando ${it.name}…`;
+          await commitTree(`Remover ${TIPO_NOME[it.tipo]?.toLowerCase() ?? "imagem"}: ${it.name}`, async () => [removeEntry(it.path)], (t) => ($("libInfo").textContent = t));
+          lib.gone.add(it.path);
+          lib.fresh.delete(it.path);
+          lib.items = lib.items.filter((i) => i.path !== it.path);
+          renderLibrary();
+          $("libInfo").textContent = `✓ ${it.name} apagado do GitHub.`;
+        } catch (err) {
+          $("libInfo").textContent = `Não consegui apagar: ${err.message}`;
+          del.disabled = false; del.dataset.sure = ""; del.textContent = "✕";
+        }
+      };
+      row.append(del);
+    }
+    return row;
+  });
+  $("lib").replaceChildren(...rows);
 }
 
 OBR.onReady(async () => {
@@ -196,18 +388,18 @@ OBR.onReady(async () => {
     // "Trocar link": same item, new file, same size on the map
     const [it] = await OBR.scene.items.getItems([editId]);
     if (it?.image) {
-      state.editing = { id: it.id, cellsWide: (it.image.width / it.grid.dpi) * Math.abs(it.scale?.x ?? 1) };
+      state.editing = { id: it.id, layer: it.layer, cellsWide: (it.image.width / it.grid.dpi) * Math.abs(it.scale?.x ?? 1) };
       $("title").textContent = `Trocar link · ${it.name}`;
       $("url").value = it.image.url;
       $("name").value = it.name;
       $("locked").checked = !!it.locked;
       $("layerField").classList.add("hidden");
-      $("add").textContent = "Trocar a imagem";
+      addLabel();
       check();
     }
   }
 
-  $("url").addEventListener("input", () => { clearTimeout(state.t); state.t = setTimeout(check, 400); });
+  $("url").addEventListener("input", () => { if (state.file) clearFile(false); clearTimeout(state.t); state.t = setTimeout(check, 400); });
   $("paste").onclick = async () => {
     try { $("url").value = await navigator.clipboard.readText(); check(); }
     catch { $("url").focus(); setStatus("Use Ctrl+V no campo do link.", "warn"); }
@@ -217,3 +409,28 @@ OBR.onReady(async () => {
   $("layer").addEventListener("click", (e) => { if (e.target.dataset.v) selectedLayer(e.target.dataset.v); });
   $("add").onclick = add;
 });
+
+// (these work even before Owlbear connects: choosing a file only needs the page)
+$("fromPC").onclick = () => { $("file").value = ""; $("file").click(); };
+$("file").onchange = (ev) => setFile(ev.target.files?.[0]);
+$("fileClear").onclick = () => clearFile();
+// paste a picture (a print, a copied image) anywhere outside the text fields; drop a file on the page
+document.addEventListener("paste", (ev) => {
+  const f = [...(ev.clipboardData?.files ?? [])].find((x) => /^(image|video)\//.test(x.type));
+  if (!f) return;
+  ev.preventDefault();
+  // (a pasted print comes as "image.png": a name with the date is easier to find later)
+  setFile(f.name === "image.png" ? new File([f], `imagem-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}.png`, { type: f.type }) : f);
+});
+document.addEventListener("dragover", (ev) => { if ([...ev.dataTransfer.types].includes("Files")) { ev.preventDefault(); document.body.classList.add("drop"); } });
+document.addEventListener("dragleave", (ev) => { if (!ev.relatedTarget) document.body.classList.remove("drop"); });
+document.addEventListener("drop", (ev) => {
+  document.body.classList.remove("drop");
+  const f = ev.dataTransfer?.files?.[0];
+  if (!f) return;
+  ev.preventDefault();
+  setFile(f);
+});
+$("libBox").addEventListener("toggle", () => { if ($("libBox").open && !lib.loaded) loadLibrary(); });
+$("libQ").addEventListener("input", renderLibrary);
+wireKeyBox((t) => setStatus(t, /^✓/.test(t) ? "ok" : "warn"), () => { if (lib.loaded) renderLibrary(); });

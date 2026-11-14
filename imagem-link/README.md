@@ -15,14 +15,30 @@ https://zlobinh.github.io/mapas/imagem-link/manifest.json
 
 ## Aba Link
 
-1. Clique no ícone da extensão (no topo da sala).
-2. Cole o link da imagem (ou vídeo `.webm`/`.mp4`, que toca em loop). A prévia avisa se o link funciona.
-3. Escolha a camada (Mapa, Objeto, Personagem) e o tamanho:
+1. Clique no ícone da extensão (no topo da sala) e escolha o tipo: **Mapa**, **Objeto** ou **Token**.
+2. Cole o link da imagem (ou vídeo `.webm`/`.mp4`, que toca em loop), **ou envie do PC** (veja abaixo).
+   A prévia avisa se o link funciona.
+3. Escolha o tamanho:
    - **Quadrados de largura**: quantos quadrados do grid a imagem ocupa de lado a lado; ou
    - **Pixels por quadrado na imagem**: se o mapa foi desenhado com quadrados de 70 px, coloque 70 e o grid casa.
 4. *Colocar no centro da tela*. Mapa já entra travado (dá pra destravar no menu do Owlbear).
 
+### Enviar do PC (mapas, tokens, objetos)
+
+Com a **⚙ Chave do GitHub** salva (a mesma da aba Carros, explicada abaixo), clique em **Enviar do PC**, arraste
+um arquivo pra janela da extensão ou cole uma imagem com **Ctrl+V** (um print, por exemplo). A prévia aparece na
+hora; ao colocar no mapa, a extensão faz um commit com o arquivo em `imagens/mapas/`, `imagens/tokens/` ou
+`imagens/objetos/` (pelo tipo escolhido) e o item já entra apontando pra ele, sem esperar o GitHub Pages.
+
+- **Converter pra WEBP**: vem marcado em PNG/JPG acima de 1 MB. Deixa o arquivo bem mais leve e mantém a
+  transparência. Só troca se o WEBP ficar menor.
+- Até ~95 MB por arquivo (limite do GitHub). Nome repetido ganha um número (`floresta-2.webp`).
+- **Imagens enviadas pro GitHub** (no fim da aba): lista tudo o que já foi enviado, com busca. **Usar** põe o link
+  no campo pra colocar de novo; **✕** (dois cliques) apaga do repositório. Apagar tira a imagem de todos os
+  mapas que usam ela.
+
 **Trocar link da imagem** (botão direito numa imagem, só o mestre): troca o arquivo mantendo o tamanho no mapa.
+Também aceita arquivo do PC.
 Serve pra trocar um mapa enviado por upload por um com link (depois apague o arquivo do armazenamento do Owlbear
 pra liberar espaço) ou pra trocar a versão de um mapa sem mexer em mais nada.
 
@@ -105,6 +121,7 @@ mostram (a extensão avisa). Um mapa muito comprido pode ser dividido em pedaço
 
 ## Para quem mantém a extensão
 
+- O acesso ao GitHub (chave, commits, listagem) fica em `gh.js`, usado pelas abas Link e Carros.
 - Os caminhos do `manifest.json` começam com `/mapas/imagem-link/` (repositório `mapas`, pasta `imagem-link`).
   Se a extensão mudar de lugar, troque esses 4 caminhos.
 - Os sprites ficam na pasta `pokemon/` da raiz do repositório. Pra adicionar ou trocar, junte tudo numa pasta

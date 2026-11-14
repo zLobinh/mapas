@@ -9,6 +9,7 @@
 // write" on this repository only) kept ONLY in this browser (localStorage). The new car shows up at once from
 // that exact commit on raw.githubusercontent.com (no waiting for GitHub Pages); the other players see it too.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
+import { OWNER, REPO, token, gh, base64, fold, slug, commitTree, listDir, blobEntry, removeEntry, rawUrl, wireKeyBox, needKey } from "./gh.js?v=1.6.0";
 
 const ROOM_CARS = "com.imagem-link/carros"; // (older version: cars kept in the room, still listed)
 const META = "com.imagem-link/meta";
@@ -16,15 +17,9 @@ const CHANGR = "com.missing-link-dev.changr/metadata";
 const PLACE = "com.imagem-link/place"; // handled by background.js
 const BASE = new URL("../carros/", import.meta.url); // <repository>/carros/
 const SIZE_KEY = "imagem-link/car-size";
-const TOKEN_KEY = "imagem-link/gh-token";
 const $ = (id) => document.getElementById(id);
 
-// the repository comes from the address: <owner>.github.io/<repository>/...
-const OWNER = location.hostname.endsWith(".github.io") ? location.hostname.split(".")[0] : "zlobinh";
-const REPO = location.hostname.endsWith(".github.io") ? location.pathname.split("/")[1] : "mapas";
-
 const state = { cars: [], size: "2", ready: false };
-const fold = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
 // (a message stays until the next one: the list refreshing doesn't wipe it)
 const say = (t) => { state.note = t || null; $("count").textContent = t || countText(); };
@@ -178,30 +173,6 @@ async function place(c, button) {
 }
 
 // ---------------------------------------------------------------- "＋ Carro do PC" -> GitHub
-const token = () => { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; } };
-
-async function gh(path, body = null, method = body ? "POST" : "GET") {
-  const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token()}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
-      ...(body ? { "Content-Type": "application/json" } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (res.status === 401) throw new Error("a chave do GitHub não funcionou (errada ou vencida): cole uma nova em ⚙ Chave do GitHub");
-  if (res.status === 403 || res.status === 404) throw new Error(`a chave não tem permissão de escrever no repositório ${REPO} (precisa de "Contents: Read and write" nele)`);
-  if (!res.ok) throw new Error(`GitHub respondeu ${res.status}: ${(await res.text()).slice(0, 160)}`);
-  return res.json();
-}
-const base64 = (file) => new Promise((ok, no) => {
-  const r = new FileReader();
-  r.onload = () => ok(String(r.result).split(",")[1]);
-  r.onerror = () => no(r.error);
-  r.readAsDataURL(file);
-});
-// folder name in the repository: "Carro da Tatu" -> "carro-da-tatu"
-const slug = (s) => fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "carro";
 
 // ---- reading a folder: one car or many mixed together (the Downloads folder itself, subfolders, renamed files)
 const isPic = (f) => /\.(png|webp)$/i.test(f.name);
@@ -345,31 +316,12 @@ function closeReview() {
 }
 
 // ---- GitHub: one commit for everything (blobs -> tree on top of the current one -> commit -> move the branch)
-async function commitTree(message, build) {
-  const repoInfo = await gh("");
-  const branch = repoInfo.default_branch || "main";
-  const ref = await gh(`/git/ref/heads/${branch}`);
-  const head = await gh(`/git/commits/${ref.object.sha}`);
-  const tree = await build(head.tree.sha);
-  const newTree = await gh("/git/trees", { base_tree: head.tree.sha, tree });
-  const commit = await gh("/git/commits", { message, tree: newTree.sha, parents: [ref.object.sha] });
-  await gh(`/git/refs/heads/${branch}`, { sha: commit.sha }, "PATCH");
-  return commit.sha;
-}
 // the files already in carros/<pasta>/ (to delete a car, or the leftovers when a car is sent again)
 async function carFiles(rootSha, pastas) {
-  const root = await gh(`/git/trees/${rootSha}`);
-  const carrosSha = root.tree.find((x) => x.path === "carros" && x.type === "tree")?.sha;
   const out = new Map();
-  if (!carrosSha) return out;
-  const carros = await gh(`/git/trees/${carrosSha}`);
-  for (const p of pastas) {
-    const sha = carros.tree.find((x) => x.path === p && x.type === "tree")?.sha;
-    out.set(p, sha ? (await gh(`/git/trees/${sha}`)).tree.filter((x) => x.type === "blob").map((x) => x.path) : []);
-  }
+  for (const p of pastas) out.set(p, (await listDir(rootSha, `carros/${p}`)).filter((x) => x.type === "blob").map((x) => x.path));
   return out;
 }
-const removeEntry = (path) => ({ path, mode: "100644", type: "blob", sha: null });
 
 async function sendCars(cars) {
   const made = [];
@@ -383,22 +335,22 @@ async function sendCars(cars) {
       for (let i = 0; i < c.pics.length; i++) {
         say(`Enviando ${c.nome}: ângulo ${i + 1} de ${c.pics.length}…`);
         const blob = await gh("/git/blobs", { content: await base64(c.pics[i]), encoding: "base64" });
-        tree.push({ path: `carros/${c.pasta}/${names[i]}`, mode: "100644", type: "blob", sha: blob.sha });
+        tree.push(blobEntry(`carros/${c.pasta}/${names[i]}`, blob.sha));
       }
       const car = { nome: c.nome, pasta: c.pasta, largura: c.w, altura: c.h, angulos: names };
       const json = await gh("/git/blobs", { content: JSON.stringify(car, null, 2), encoding: "utf-8" });
-      tree.push({ path: `carros/${c.pasta}/carro.json`, mode: "100644", type: "blob", sha: json.sha });
+      tree.push(blobEntry(`carros/${c.pasta}/carro.json`, json.sha));
       // a car sent again with fewer angles: the old extra pictures go away
       for (const f of old.get(c.pasta) ?? []) if (f !== "carro.json" && !names.includes(f)) tree.push(removeEntry(`carros/${c.pasta}/${f}`));
       made.push(car);
     }
     say(`Gravando ${label} no GitHub…`);
     return tree;
-  });
+  }, say);
   // usable right away from that exact commit (raw.githubusercontent.com: right image type and CORS, which
   // Owlbear needs; jsDelivr refuses repositories this big), no waiting for GitHub Pages
   for (const car of made) {
-    const fresh = { ...car, base: new URL(`https://raw.githubusercontent.com/${OWNER}/${REPO}/${sha}/carros/${car.pasta}/`), key: fold(`${car.nome} ${car.pasta}`) };
+    const fresh = { ...car, base: new URL(rawUrl(sha, `carros/${car.pasta}/`)), key: fold(`${car.nome} ${car.pasta}`) };
     state.fresh = [...(state.fresh ?? []).filter((c) => c.pasta !== car.pasta), fresh];
     state.repo = [...(state.repo ?? []).filter((c) => c.pasta !== car.pasta), fresh];
     state.gone?.delete(car.pasta);
@@ -413,7 +365,7 @@ async function deleteCar(c) {
     const files = (await carFiles(rootSha, [c.pasta])).get(c.pasta) ?? [];
     if (!files.length) throw new Error(`a pasta carros/${c.pasta} não está no repositório`);
     return files.map((f) => removeEntry(`carros/${c.pasta}/${f}`));
-  });
+  }, say);
   (state.gone ??= new Set()).add(c.pasta);
   state.fresh = (state.fresh ?? []).filter((x) => x.pasta !== c.pasta);
   state.repo = (state.repo ?? []).filter((x) => x.pasta !== c.pasta);
@@ -422,7 +374,7 @@ async function deleteCar(c) {
 }
 
 $("fromPC").onclick = () => {
-  if (!token()) { $("ghBox").open = true; say("Primeiro cole a sua chave do GitHub em ⚙ Chave do GitHub (só uma vez)."); return; }
+  if (!needKey(say)) return;
   $("folder").value = "";
   $("folder").click();
 };
@@ -451,23 +403,8 @@ $("rvSend").onclick = async () => {
   finally { $("rvCancel").disabled = $("fromPC").disabled = false; countReview(); }
 };
 
-// the key: only in this browser
-function showKey() {
-  const has = !!token();
-  $("ghState").textContent = has ? `✓ chave salva neste navegador (repositório ${OWNER}/${REPO})` : "nenhuma chave salva";
-  $("ghForget").hidden = !has;
-  if (state.cars.length) render(); // (the ✕ that deletes from GitHub needs the key)
-}
-$("ghSave").onclick = async () => {
-  const t = $("ghToken").value.trim();
-  if (!t) return;
-  try { localStorage.setItem(TOKEN_KEY, t); } catch { say("Este navegador não deixou guardar a chave."); return; }
-  $("ghToken").value = "";
-  try { await gh(""); showKey(); say("✓ Chave do GitHub salva e funcionando."); $("ghBox").open = false; }
-  catch (err) { try { localStorage.removeItem(TOKEN_KEY); } catch {} showKey(); say(`A chave não funcionou: ${err.message}`); }
-};
-$("ghForget").onclick = () => { try { localStorage.removeItem(TOKEN_KEY); } catch {} showKey(); say("Chave apagada deste navegador."); };
-showKey();
+// the key: only in this browser (the ✕ that deletes from GitHub needs it)
+wireKeyBox(say, () => { if (state.cars.length) render(); });
 
 function setSize(v) {
   state.size = v;

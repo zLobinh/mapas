@@ -84,3 +84,19 @@ input[type="search"] { width: 100%; padding: 8px 10px; border-radius: 8px; borde
 .rv-pics { display: flex; gap: 4px; overflow-x: auto; }
 .rv-pics img { width: 64px; height: 46px; object-fit: contain; border-radius: 6px; background: repeating-conic-gradient(#0000 0 25%, #8882 0 50%) 0 0 / 10px 10px; cursor: pointer; flex: none; }
 .rv-pics img:first-child { outline: 2px solid var(--accent); cursor: default; }
+/* Link tab: file from the PC, and the files already sent */
+.pcrow { margin-top: 6px; gap: 6px; flex-wrap: wrap; }
+.pcrow button { padding: 4px 10px; }
+.filebox { margin-top: 6px; padding: 6px 8px; border: 1px dashed var(--accent); border-radius: 8px; }
+.filebox .check { margin-top: 4px; }
+.filebox button { padding: 2px 8px; }
+body.drop main { outline: 2px dashed var(--accent); outline-offset: -6px; border-radius: 10px; }
+.lib { display: flex; flex-direction: column; gap: 4px; }
+.librow { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 8px; background: var(--panel); }
+.libpic { width: 44px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 6px; font-size: 10px; color: var(--muted);
+  background: repeating-conic-gradient(#0000 0 25%, #8882 0 50%) 0 0 / 10px 10px; overflow: hidden; }
+.libpic img { width: 100%; height: 100%; object-fit: contain; }
+.libtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.libtxt b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.librow button { padding: 3px 8px; }
+.libdel:hover:not(:disabled) { background: #b91c1c; color: #fff; border-color: #b91c1c; }

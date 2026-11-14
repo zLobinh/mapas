@@ -11,10 +11,20 @@
     <nav class="tabs">
       <a href="preview.html" class="on">Link</a>
       <a href="preview-pokemon.html">Pokémon</a>
+      <a href="preview-carros.html">Carros</a>
     </nav>
     <main id="app">
       <h1 id="title">Imagem por Link</h1>
       <p class="muted small">A imagem fica no site onde está hospedada: o Owlbear só guarda o link, sem gastar o seu armazenamento.</p>
+
+      <div class="field" id="layerField">
+        <span>Tipo</span>
+        <div class="seg" id="layer">
+          <button type="button" data-v="MAP" class="on">Mapa</button>
+          <button type="button" data-v="PROP">Objeto</button>
+          <button type="button" data-v="CHARACTER">Token</button>
+        </div>
+      </div>
 
       <label class="field">
         <span>Link da imagem ou vídeo</span>
@@ -23,22 +33,23 @@
           <button id="paste" type="button" title="Colar">Colar</button>
         </div>
       </label>
-      <div id="status" class="status muted small">Cole um link pra ver a prévia.</div>
+      <div class="row small pcrow">
+        <span class="muted">ou</span>
+        <button id="fromPC" type="button" title="Escolha uma imagem ou vídeo do computador: vai pro seu repositório no GitHub e entra no mapa por link.">Enviar do PC</button>
+        <span class="muted">ou arraste / cole (Ctrl+V) uma imagem aqui</span>
+        <input id="file" type="file" accept="image/*,video/webm,video/mp4" hidden />
+      </div>
+      <div id="fileBox" class="filebox small hidden">
+        <div class="row"><span id="fileInfo" style="flex:1"></span><button id="fileClear" type="button" title="Voltar a usar link">Tirar</button></div>
+        <label class="check" id="webpRow"><input id="webp" type="checkbox" /> Converter pra WEBP (bem mais leve, mantém a transparência)</label>
+      </div>
+      <div id="status" class="status muted small">Cole um link ou envie do PC pra ver a prévia.</div>
       <div id="preview" class="preview hidden"></div>
 
       <label class="field">
         <span>Nome</span>
         <input id="name" type="text" placeholder="Mapa da floresta" />
       </label>
-
-      <div class="field" id="layerField">
-        <span>Camada</span>
-        <div class="seg" id="layer">
-          <button type="button" data-v="MAP" class="on">Mapa</button>
-          <button type="button" data-v="PROP">Objeto</button>
-          <button type="button" data-v="CHARACTER">Personagem</button>
-        </div>
-      </div>
 
       <div class="field">
         <span>Tamanho</span>
@@ -55,9 +66,34 @@
         <button id="add" class="primary" type="button" disabled>Colocar no centro da tela</button>
       </div>
 
+      <details id="libBox" class="small">
+        <summary>Imagens enviadas pro GitHub</summary>
+        <input id="libQ" type="search" placeholder="Buscar pelo nome" autocomplete="off" style="margin-top:6px" />
+        <div id="libInfo" class="muted" style="margin:4px 0"></div>
+        <div id="lib" class="lib"></div>
+      </details>
+
+      <details id="ghBox" class="ghbox small">
+        <summary>⚙ Chave do GitHub <span id="ghState" class="muted"></span></summary>
+        <div class="muted">Pra enviar arquivos do PC pro seu repositório, a extensão usa uma chave do GitHub que fica <b>só neste navegador</b> (não vai pra sala nem pros outros jogadores). Pra criar:</div>
+        <ol class="muted">
+          <li>Abra <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a>.</li>
+          <li>Dê um nome (ex.: Owlbear) e uma validade.</li>
+          <li><i>Repository access</i>: <b>Only select repositories</b> → o repositório <b>mapas</b>.</li>
+          <li><i>Permissions → Repository permissions → Contents</i>: <b>Read and write</b>.</li>
+          <li><b>Generate token</b>, copie e cole aqui.</li>
+        </ol>
+        <div class="row" style="gap:6px">
+          <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off" style="flex:1" />
+          <button id="ghSave" type="button">Salvar</button>
+          <button id="ghForget" type="button" hidden>Apagar</button>
+        </div>
+      </details>
+
       <details class="small">
         <summary>Onde hospedar imagens pesadas</summary>
         <ul>
+          <li><b>Enviar do PC</b> (acima): manda pro seu repositório do GitHub sozinho. Até ~95 MB por arquivo.</li>
           <li><b>GitHub Pages</b> (grátis): crie um repositório público, suba as imagens e ative o Pages em
             Settings &rarr; Pages. O link fica <code>https://seu-usuario.github.io/repositorio/mapa.webp</code>.
             Até 100 MB por arquivo. Link de arquivo do github.com (<code>/blob/</code>) é convertido sozinho.</li>
