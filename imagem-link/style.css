@@ -68,7 +68,12 @@ input[type="search"] { width: 100%; padding: 8px 10px; border-radius: 8px; borde
 /* Carros tab */
 .pgrid.cars { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
 .pgrid.cars img { width: 92px; height: 64px; image-rendering: auto; }
-/* a room car (sent from the PC): the ✕ takes it off this room's list */
+/* the GitHub key ("＋ Carro do PC" sends the folder to the repository) */
+.ghbox { margin: 6px 0; padding: 6px 8px; border-radius: 8px; background: var(--panel); line-height: 1.45; }
+.ghbox summary { cursor: pointer; }
+.ghbox ol { margin: 4px 0 6px; padding-left: 18px; }
+.ghbox a { color: inherit; }
+/* a room car (older version): the ✕ takes it off this room's list */
 .pcard .del { position: absolute; top: 2px; right: 4px; font-size: 10px; color: var(--muted); cursor: pointer; padding: 0 3px; border-radius: 4px; }
 .pcard .del:hover { color: #fff; background: #b91c1c; }
 #reload { width: 100%; margin-top: 8px; }

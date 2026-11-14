@@ -61,18 +61,20 @@ tira 8 (ou 4) prints na mesma escala, recorta o fundo e salva tudo em `Downloads
 pra `carros/` do repositório e publique; a aba lista as pastas sozinha (pela API do GitHub) ou por um
 `carros/index.json` opcional (`["pasta1", "pasta2"]`).
 
-### Carro direto do PC (sem GitHub)
+### Carro direto do PC (envia pro GitHub pela própria aba)
 
-- **＋ Carro do PC:** escolha a pasta que o Pacote Owlbear salvou (`Downloads/carros/<nome>/`). As imagens vão pro
-  armazenamento da sua conta do Owlbear (aparece a janela de envio dele) e em seguida o seletor de imagens do
-  Owlbear abre já buscando pelo nome do carro: marque todos os ângulos e confirme. O carro fica salvo **na sala**
-  (todo mundo dela vê na lista, marcado "· sala") e entra no mapa com todos os ângulos, como os do repositório.
-  A ordem dos ângulos segue o `carro.json` da pasta (sem ele, a ordem dos nomes dos arquivos).
-- **＋ Carro com imagens do Owlbear:** pra imagens que já estão no seu Owlbear: marque os ângulos (na ordem dos
-  nomes) e o carro é montado com eles.
-- **✕** no cartão (dois cliques) tira o carro da lista da sala; as imagens continuam no armazenamento do Owlbear.
-- Diferente dos carros do repositório, esses **gastam o armazenamento da conta** (uns 200 KB por ângulo), e a
-  lista da sala tem espaço pra uns 10 carros de 8 ângulos.
+Sem copiar pasta nem usar o GitHub Desktop:
+
+1. Uma vez só: abra **⚙ Chave do GitHub** na aba Carros e cole uma chave *fine-grained* do GitHub com acesso
+   **só ao repositório `mapas`** e a permissão **Contents: Read and write** (o passo a passo está na própria aba).
+   A chave fica **só neste navegador** (não vai pra sala nem pros outros jogadores); "Apagar" tira ela.
+2. **＋ Carro do PC** → escolha a pasta que o Pacote Owlbear salvou (`Downloads/carros/<nome>/`).
+3. A extensão faz **um commit** no repositório com os PNGs e o `carro.json` em `carros/<nome>/` e o carro já
+   aparece na lista e entra no mapa, pelo endereço exato desse commit (`raw.githubusercontent.com`), sem esperar
+   o GitHub Pages atualizar. Os outros jogadores também veem ele na lista.
+
+A ordem dos ângulos segue o `carro.json` da pasta (sem ele, a ordem dos nomes dos arquivos). Mandar de novo uma
+pasta com o mesmo nome atualiza o carro.
 
 ## Onde hospedar imagens pesadas
 
