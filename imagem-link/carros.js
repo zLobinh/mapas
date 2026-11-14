@@ -9,7 +9,7 @@
 // write" on this repository only) kept ONLY in this browser (localStorage). The new car shows up at once from
 // that exact commit on raw.githubusercontent.com (no waiting for GitHub Pages); the other players see it too.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
-import { OWNER, REPO, token, gh, base64, fold, slug, commitTree, listDir, blobEntry, removeEntry, rawUrl, wireKeyBox, needKey } from "./gh.js?v=1.6.0";
+import { HOST_OWNER, HOST_REPO, ready, sameAsHost, gh, base64, fold, slug, commitTree, listDir, listNow, blobEntry, removeEntry, rawUrl, rawBranchUrl, wireKeyBox, needKey } from "./gh.js?v=1.7.0";
 
 const ROOM_CARS = "com.imagem-link/carros"; // (older version: cars kept in the room, still listed)
 const META = "com.imagem-link/meta";
@@ -31,23 +31,18 @@ for (const a of document.querySelectorAll(".tabs a")) {
   a.href = `${a.getAttribute("href").split("?")[0]}?${params}`;
 }
 
-// the car folders: carros/index.json when there is one, otherwise the GitHub listing of carros/
-async function carFolders() {
+// the extension's own catalog (the repository it is published from: read-only for everyone)
+async function catalogFolders() {
   const idx = await fetch(new URL("index.json", BASE), { cache: "no-cache" }).catch(() => null);
   if (idx?.ok) return (await idx.json()).map((x) => (typeof x === "string" ? x : x.pasta));
-  // (with the key the listing is fresher and has a much bigger limit of queries)
-  const auth = token() ? { headers: { Authorization: `Bearer ${token()}` } } : {};
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/carros`;
-  let res = await fetch(url, { cache: "no-cache", ...auth });
-  if (res.status === 401) res = await fetch(url, { cache: "no-cache" }); // (an expired key doesn't hide the list)
+  const res = await fetch(`https://api.github.com/repos/${HOST_OWNER}/${HOST_REPO}/contents/carros`, { cache: "no-cache" });
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`GitHub respondeu ${res.status}${res.status === 403 ? " (limite de consultas; tente daqui a pouco)" : ""}`);
   return (await res.json()).filter((x) => x.type === "dir").map((x) => x.name);
 }
-
-// one car folder: from GitHub Pages, or (just sent, Pages not updated yet) straight from the repository
-async function readCar(f) {
-  const bases = [new URL(`${encodeURIComponent(f)}/`, BASE), new URL(`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/carros/${encodeURIComponent(f)}/`)];
+// one car folder of the catalog: from GitHub Pages, or (Pages not updated yet) straight from the repository
+async function readCatalogCar(f) {
+  const bases = [new URL(`${encodeURIComponent(f)}/`, BASE), new URL(`https://raw.githubusercontent.com/${HOST_OWNER}/${HOST_REPO}/main/carros/${encodeURIComponent(f)}/`)];
   for (const base of bases) {
     const r = await fetch(new URL("carro.json", base), { cache: "no-cache" }).catch(() => null);
     if (!r?.ok) continue;
@@ -56,24 +51,38 @@ async function readCar(f) {
   }
   return null;
 }
+// the cars in the person's own repository (⚙ GitHub): these can be deleted
+async function myCars() {
+  if (!ready()) return [];
+  const dirs = (await listNow("carros")).filter((x) => x.type === "dir").map((x) => x.name);
+  const cars = await Promise.all(dirs.map(async (f) => {
+    const base = new URL(rawBranchUrl(`carros/${f}/`));
+    const r = await fetch(new URL("carro.json", base), { cache: "no-cache" }).catch(() => null);
+    if (!r?.ok) return null;
+    const c = await r.json();
+    return { ...c, pasta: c.pasta ?? f, base, mine: true, key: fold(`${c.nome} ${f} meu`) };
+  }));
+  return cars.filter(Boolean);
+}
 
 async function load() {
   $("count").textContent = "Carregando os carros…";
   $("grid").replaceChildren();
-  let repo = [];
-  try {
-    const cars = await Promise.all((await carFolders()).map(readCar));
-    // (a car just deleted may still be on GitHub Pages for a few minutes)
-    repo = cars.filter((c) => c?.angulos?.length && !state.gone?.has(c.pasta));
-  } catch (err) {
-    $("count").textContent = `Não consegui listar os carros do repositório: ${err.message}`;
-  }
+  const problems = [];
+  const [mine, catalog] = await Promise.all([
+    myCars().catch((err) => { problems.push(`do seu repositório: ${err.message}`); return []; }),
+    // (when the person's repository IS the catalog, it's listed once, as theirs)
+    sameAsHost() && ready() ? [] : catalogFolders().then((fs) => Promise.all(fs.map(readCatalogCar))).catch((err) => { problems.push(`do catálogo: ${err.message}`); return []; }),
+  ]);
+  // (a car just deleted may still be listed for a few minutes)
+  let repo = [...mine, ...catalog.filter((c) => c && !mine.some((m) => m.pasta === c.pasta))]
+    .filter((c) => c?.angulos?.length && !state.gone?.has(c.pasta));
   // a car just sent keeps its commit address (the listing may not have it yet)
-  for (const c of state.fresh ?? []) if (!repo.some((r) => r.pasta === c.pasta)) repo.push(c);
+  for (const c of state.fresh ?? []) { repo = repo.filter((r) => r.pasta !== c.pasta); repo.push(c); }
   state.repo = repo;
+  if (problems.length) say(`Não consegui listar os carros ${problems.join("; ")}`);
   await loadRoomCars();
-}
-// the cars kept in the room by an older version (full addresses, no base folder)
+}// the cars kept in the room by an older version (full addresses, no base folder)
 async function loadRoomCars() {
   let room = [];
   if (state.ready) room = ((await OBR.room.getMetadata().catch(() => ({})))[ROOM_CARS] ?? []);
@@ -114,7 +123,7 @@ function render() {
         await OBR.room.setMetadata({ [ROOM_CARS]: rest });
       };
       b.append(x);
-    } else if (token() && c.pasta) {
+    } else if (c.mine && ready()) {
       // a car in the repository: with the GitHub key, ✕ deletes it (a commit removing carros/<pasta>/)
       const x = document.createElement("span");
       x.className = "del";
@@ -299,7 +308,7 @@ function noteOf(c) {
   if (c.pics.length < c.want) parts.push(`⚠ faltam ${c.want - c.pics.length} ângulo(s) do pacote`);
   if (c.dup) parts.push("repetido (versão mais antiga ou incompleta)");
   if (c.loose) parts.push("sem carro.json: confira a ordem");
-  if ((state.repo ?? []).some((r) => r.pasta === c.pasta)) parts.push("substitui o que já está no GitHub");
+  if ((state.repo ?? []).some((r) => r.mine && r.pasta === c.pasta)) parts.push("substitui o que já está no seu GitHub");
   return parts.join(" · ");
 }
 function countReview() {
@@ -350,7 +359,7 @@ async function sendCars(cars) {
   // usable right away from that exact commit (raw.githubusercontent.com: right image type and CORS, which
   // Owlbear needs; jsDelivr refuses repositories this big), no waiting for GitHub Pages
   for (const car of made) {
-    const fresh = { ...car, base: new URL(rawUrl(sha, `carros/${car.pasta}/`)), key: fold(`${car.nome} ${car.pasta}`) };
+    const fresh = { ...car, base: new URL(rawUrl(sha, `carros/${car.pasta}/`)), mine: true, key: fold(`${car.nome} ${car.pasta} meu`) };
     state.fresh = [...(state.fresh ?? []).filter((c) => c.pasta !== car.pasta), fresh];
     state.repo = [...(state.repo ?? []).filter((c) => c.pasta !== car.pasta), fresh];
     state.gone?.delete(car.pasta);
@@ -404,7 +413,7 @@ $("rvSend").onclick = async () => {
 };
 
 // the key: only in this browser (the ✕ that deletes from GitHub needs it)
-wireKeyBox(say, () => { if (state.cars.length) render(); });
+wireKeyBox(say, (ok) => { if (ok !== state.wasReady) { state.wasReady = ok; load(); } });
 
 function setSize(v) {
   state.size = v;
@@ -416,7 +425,6 @@ $("q").addEventListener("input", render);
 $("reload").onclick = () => { state.note = null; load(); };
 $("size").addEventListener("click", (ev) => { if (ev.target.dataset.v) setSize(ev.target.dataset.v); });
 try { setSize(localStorage.getItem(SIZE_KEY) || "2"); } catch { setSize("2"); }
-load();
 
 OBR.onReady(async () => {
   state.ready = true;

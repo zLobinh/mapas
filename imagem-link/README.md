@@ -23,17 +23,31 @@ https://zlobinh.github.io/mapas/imagem-link/manifest.json
    - **Pixels por quadrado na imagem**: se o mapa foi desenhado com quadrados de 70 px, coloque 70 e o grid casa.
 4. *Colocar no centro da tela*. Mapa já entra travado (dá pra destravar no menu do Owlbear).
 
+## Seu repositório do GitHub (pra enviar do PC)
+
+As abas Link e Carros mandam arquivos do PC pro **seu próprio repositório** do GitHub (grátis); cada pessoa usa o
+seu. Os arquivos ficam em aw.githubusercontent.com, que qualquer jogador abre. Uma vez só, em **⚙ GitHub**
+(nas duas abas, o passo a passo está lá):
+
+1. Crie um repositório **público** no GitHub (ex.: owlbear-imagens) com **Add a README file** marcado.
+2. Crie uma chave *fine-grained* com acesso **só a esse repositório** e **Contents: Read and write**.
+3. Escreva o repositório (seu-usuario/owlbear-imagens, ou cole o link dele) e a chave, e clique em **Salvar**.
+   A extensão confere se a chave escreve nele e avisa se ele estiver privado (privado, os outros não veem).
+
+O repositório e a chave ficam **só neste navegador**: não vão pra sala nem pros outros jogadores. "Apagar" tira os
+dois.
+
 ### Enviar do PC (mapas, tokens, objetos)
 
-Com a **⚙ Chave do GitHub** salva (a mesma da aba Carros, explicada abaixo), clique em **Enviar do PC**, arraste
+Com o **⚙ GitHub** configurado, clique em **Enviar do PC**, arraste
 um arquivo pra janela da extensão ou cole uma imagem com **Ctrl+V** (um print, por exemplo). A prévia aparece na
 hora; ao colocar no mapa, a extensão faz um commit com o arquivo em `imagens/mapas/`, `imagens/tokens/` ou
-`imagens/objetos/` (pelo tipo escolhido) e o item já entra apontando pra ele, sem esperar o GitHub Pages.
+`imagens/objetos/` (pelo tipo escolhido) e o item já entra apontando pra ele, na hora.
 
 - **Converter pra WEBP**: vem marcado em PNG/JPG acima de 1 MB. Deixa o arquivo bem mais leve e mantém a
   transparência. Só troca se o WEBP ficar menor.
 - Até ~95 MB por arquivo (limite do GitHub). Nome repetido ganha um número (`floresta-2.webp`).
-- **Imagens enviadas pro GitHub** (no fim da aba): lista tudo o que já foi enviado, com busca. **Usar** põe o link
+- **Imagens enviadas pro GitHub** (no fim da aba): lista tudo o que já está no seu repositório, com busca. **Usar** põe o link
   no campo pra colocar de novo; **✕** (dois cliques) apaga do repositório. Apagar tira a imagem de todos os
   mapas que usam ela.
 
@@ -65,7 +79,7 @@ Veículos (ou qualquer modelo 3D) que entram no mapa já com todos os ângulos:
   [Changr](https://extensions.owlbear.rodeo/changr) ("Change Image"), e os ângulos aparecem no menu dele também.
 - Os ângulos ficam no token no formato do Changr (`com.missing-link-dev.changr/metadata` → `imageOptions`).
 
-Cada carro é uma pasta `carros/<nome>/` do repositório com um PNG transparente por ângulo, na ordem do sentido
+Cada carro é uma pasta `carros/<nome>/` de um repositório com um PNG transparente por ângulo, na ordem do sentido
 horário, e um `carro.json`:
 
 ```json
@@ -73,17 +87,16 @@ horário, e um `carro.json`:
 ```
 
 O jeito fácil de gerar é o botão **Pacote Owlbear** do visualizador isométrico do Sketchfab: ele gira o modelo,
-tira 8 (ou 4) prints na mesma escala, recorta o fundo e salva tudo em `Downloads/carros/<nome>/`. Copie essa pasta
-pra `carros/` do repositório e publique; a aba lista as pastas sozinha (pela API do GitHub) ou por um
-`carros/index.json` opcional (`["pasta1", "pasta2"]`).
+tira 8 (ou 4) prints na mesma escala, recorta o fundo e salva tudo em `Downloads/carros/<nome>/`.
+
+A aba lista os carros do **seu repositório** (com ✕ pra apagar) e os do repositório onde a extensão está publicada
+(catálogo, só pra usar; `carros/index.json` opcional com `["pasta1", "pasta2"]`).
 
 ### Carro direto do PC (envia pro GitHub pela própria aba)
 
 Sem copiar pasta nem usar o GitHub Desktop:
 
-1. Uma vez só: abra **⚙ Chave do GitHub** na aba Carros e cole uma chave *fine-grained* do GitHub com acesso
-   **só ao repositório `mapas`** e a permissão **Contents: Read and write** (o passo a passo está na própria aba).
-   A chave fica **só neste navegador** (não vai pra sala nem pros outros jogadores); "Apagar" tira ela.
+1. Uma vez só: configure o **⚙ GitHub** (veja *Seu repositório do GitHub* acima).
 2. **＋ Carro do PC** → escolha uma pasta com **um ou vários carros**: a de um carro só, a `Downloads/carros`
    inteira ou uma pasta onde os downloads caíram todos misturados (até com nomes aleatórios). A extensão separa
    cada carro sozinha:
@@ -99,7 +112,7 @@ Sem copiar pasta nem usar o GitHub Desktop:
 
 Mandar de novo um carro com o mesmo nome substitui o antigo (os ângulos que sobrarem são apagados).
 
-**Apagar um carro:** com a chave salva, cada carro tem um **✕** no canto; dois cliques apagam a pasta dele do
+**Apagar um carro:** com o ⚙ GitHub configurado, cada carro do seu repositório tem um **✕** no canto; dois cliques apagam a pasta dele do
 repositório (um commit). Pode levar uns minutos pra sumir do GitHub Pages, mas some da lista na hora.
 
 ## Onde hospedar imagens pesadas
@@ -121,7 +134,7 @@ mostram (a extensão avisa). Um mapa muito comprido pode ser dividido em pedaço
 
 ## Para quem mantém a extensão
 
-- O acesso ao GitHub (chave, commits, listagem) fica em `gh.js`, usado pelas abas Link e Carros.
+- O acesso ao GitHub (repositório da pessoa, chave, commits, listagem) fica em `gh.js`, usado pelas abas Link e Carros.
 - Os caminhos do `manifest.json` começam com `/mapas/imagem-link/` (repositório `mapas`, pasta `imagem-link`).
   Se a extensão mudar de lugar, troque esses 4 caminhos.
 - Os sprites ficam na pasta `pokemon/` da raiz do repositório. Pra adicionar ou trocar, junte tudo numa pasta

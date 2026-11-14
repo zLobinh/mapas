@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Imagem por Link</title>
-    <link rel="stylesheet" href="style.css?v=1.6.0" />
+    <link rel="stylesheet" href="style.css?v=1.7.0" />
   </head>
   <body>
     <nav class="tabs">
-      <a href="index.html?v=1.6.0" class="on">Link</a>
-      <a href="pokemon.html?v=1.6.0">Pokémon</a>
-      <a href="carros.html?v=1.6.0">Carros</a>
+      <a href="index.html?v=1.7.0" class="on">Link</a>
+      <a href="pokemon.html?v=1.7.0">Pokémon</a>
+      <a href="carros.html?v=1.7.0">Carros</a>
     </nav>
     <main id="app">
       <h1 id="title">Imagem por Link</h1>
@@ -73,26 +73,26 @@
       </details>
 
       <details id="ghBox" class="ghbox small">
-        <summary>⚙ Chave do GitHub <span id="ghState" class="muted"></span></summary>
-        <div class="muted">Pra enviar arquivos do PC pro seu repositório, a extensão usa uma chave do GitHub que fica <b>só neste navegador</b> (não vai pra sala nem pros outros jogadores). Pra criar:</div>
+        <summary>⚙ GitHub <span id="ghState" class="muted"></span></summary>
+        <div class="muted">Os arquivos enviados do PC vão pro <b>seu próprio repositório</b> do GitHub (grátis). O repositório e a chave ficam <b>só neste navegador</b>: não vão pra sala nem pros outros jogadores. Uma vez só:</div>
         <ol class="muted">
-          <li>Abra <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a>.</li>
-          <li>Dê um nome (ex.: Owlbear) e uma validade.</li>
-          <li><i>Repository access</i>: <b>Only select repositories</b> → o repositório <b>mapas</b>.</li>
+          <li>No GitHub, <a href="https://github.com/new" target="_blank" rel="noopener">crie um repositório</a> <b>público</b> (ex.: <i>owlbear-imagens</i>) com <b>Add a README file</b> marcado.</li>
+          <li>Abra <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained token</a>, dê um nome e uma validade.</li>
+          <li><i>Repository access</i>: <b>Only select repositories</b> → esse repositório.</li>
           <li><i>Permissions → Repository permissions → Contents</i>: <b>Read and write</b>.</li>
-          <li><b>Generate token</b>, copie e cole aqui.</li>
+          <li><b>Generate token</b>, copie e cole abaixo junto com o nome do repositório.</li>
         </ol>
+        <input id="ghRepo" type="text" placeholder="seu-usuario/owlbear-imagens" autocomplete="off" style="margin-bottom:6px" />
         <div class="row" style="gap:6px">
           <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off" style="flex:1" />
           <button id="ghSave" type="button">Salvar</button>
           <button id="ghForget" type="button" hidden>Apagar</button>
         </div>
       </details>
-
       <details class="small">
         <summary>Onde hospedar imagens pesadas</summary>
         <ul>
-          <li><b>Enviar do PC</b> (acima): manda pro seu repositório do GitHub sozinho. Até ~95 MB por arquivo.</li>
+          <li><b>Enviar do PC</b> (acima): manda pro seu próprio repositório do GitHub sozinho (configure em ⚙ GitHub). Até ~95 MB por arquivo.</li>
           <li><b>GitHub Pages</b> (grátis): crie um repositório público, suba as imagens e ative o Pages em
             Settings &rarr; Pages. O link fica <code>https://seu-usuario.github.io/repositorio/mapa.webp</code>.
             Até 100 MB por arquivo. Link de arquivo do github.com (<code>/blob/</code>) é convertido sozinho.</li>
@@ -107,6 +107,6 @@
       </details>
       <footer class="credit">Criado por: Lobynh</footer>
     </main>
-    <script type="module" src="app.js?v=1.6.0"></script>
+    <script type="module" src="app.js?v=1.7.0"></script>
   </body>
 </html>

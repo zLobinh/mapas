@@ -5,7 +5,7 @@
 // "Enviar do PC" (or drag / paste a picture): the file goes to this repository through the GitHub API, in
 // imagens/<mapas|objetos|tokens>/, and the item points to it (see gh.js; the key stays in this browser).
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
-import { OWNER, REPO, token, gh, base64, slug, fold, commitTree, listDir, blobEntry, removeEntry, rawUrl, pagesUrl, wireKeyBox, needKey } from "./gh.js?v=1.6.0";
+import { ready, gh, base64, slug, fold, commitTree, listDir, listNow, blobEntry, removeEntry, rawUrl, rawBranchUrl, wireKeyBox, needKey } from "./gh.js?v=1.7.0";
 
 export const ID = "com.imagem-link";
 const META = `${ID}/meta`;
@@ -283,20 +283,20 @@ async function uploadFile() {
 
 // ---------------------------------------------------------------- the files already sent (imagens/...)
 const lib = { items: [], fresh: new Map(), gone: new Set(), loaded: false };
-const urlOfLib = (it) => lib.fresh.get(it.path)?.url ?? pagesUrl(it.path);
+const urlOfLib = (it) => lib.fresh.get(it.path)?.url ?? rawBranchUrl(it.path);
 
 async function loadLibrary() {
   $("libInfo").textContent = "Carregando…";
   const items = [];
+  if (!ready()) {
+    lib.items = []; lib.loaded = false;
+    $("lib").replaceChildren();
+    $("libInfo").textContent = "Configure o seu repositório em ⚙ GitHub pra ver e enviar arquivos.";
+    return;
+  }
   try {
-    const auth = token() ? { headers: { Authorization: `Bearer ${token()}` } } : {};
     for (const tipo of Object.values(TIPOS)) {
-      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/imagens/${tipo}`;
-      let r = await fetch(url, { cache: "no-store", ...auth });
-      if (r.status === 401) r = await fetch(url, { cache: "no-store" });
-      if (r.status === 404) continue;
-      if (!r.ok) throw new Error(`GitHub respondeu ${r.status}${r.status === 403 ? " (limite de consultas; salve a chave ou tente daqui a pouco)" : ""}`);
-      for (const x of await r.json()) if (x.type === "file") items.push({ name: x.name, path: x.path, size: x.size, tipo });
+      for (const x of await listNow(`imagens/${tipo}`)) if (x.type === "file") items.push({ name: x.name, path: x.path, size: x.size, tipo });
     }
   } catch (err) {
     $("libInfo").textContent = `Não consegui listar: ${err.message}`;
@@ -349,7 +349,7 @@ function renderLibrary() {
       $("app").scrollIntoView({ behavior: "smooth" });
     };
     row.append(pic, txt, use);
-    if (token()) {
+    if (ready()) {
       const del = document.createElement("button");
       del.type = "button";
       del.className = "libdel";
@@ -433,4 +433,4 @@ document.addEventListener("drop", (ev) => {
 });
 $("libBox").addEventListener("toggle", () => { if ($("libBox").open && !lib.loaded) loadLibrary(); });
 $("libQ").addEventListener("input", renderLibrary);
-wireKeyBox((t) => setStatus(t, /^✓/.test(t) ? "ok" : "warn"), () => { if (lib.loaded) renderLibrary(); });
+wireKeyBox((t) => setStatus(t, /^✓/.test(t) ? "ok" : "warn"), () => { lib.loaded = false; if ($("libBox").open) loadLibrary(); });
