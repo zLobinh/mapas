@@ -68,13 +68,23 @@ Sem copiar pasta nem usar o GitHub Desktop:
 1. Uma vez só: abra **⚙ Chave do GitHub** na aba Carros e cole uma chave *fine-grained* do GitHub com acesso
    **só ao repositório `mapas`** e a permissão **Contents: Read and write** (o passo a passo está na própria aba).
    A chave fica **só neste navegador** (não vai pra sala nem pros outros jogadores); "Apagar" tira ela.
-2. **＋ Carro do PC** → escolha a pasta que o Pacote Owlbear salvou (`Downloads/carros/<nome>/`).
-3. A extensão faz **um commit** no repositório com os PNGs e o `carro.json` em `carros/<nome>/` e o carro já
-   aparece na lista e entra no mapa, pelo endereço exato desse commit (`raw.githubusercontent.com`), sem esperar
-   o GitHub Pages atualizar. Os outros jogadores também veem ele na lista.
+2. **＋ Carro do PC** → escolha uma pasta com **um ou vários carros**: a de um carro só, a `Downloads/carros`
+   inteira ou uma pasta onde os downloads caíram todos misturados (até com nomes aleatórios). A extensão separa
+   cada carro sozinha:
+   - pelo `carro.json` de cada pacote: os nomes dos arquivos; se o navegador salvou com nomes aleatórios, o
+     tamanho em bytes de cada PNG (pacotes novos) ou o tamanho da imagem e a ordem em que foram salvos (antigos);
+   - imagens sem `carro.json` viram um carro por pasta e tamanho de imagem.
+3. Aparece a lista do que foi achado pra conferir: desmarque o que não quer, troque o nome, e clique numa imagem
+   pra passar ela pra frente na ordem (a 1ª é a que entra no mapa). Pacote repetido ou com ângulo faltando vem
+   desmarcado.
+4. **Enviar**: um commit só com todos os carros em `carros/<nome>/` (com nomes de arquivo limpos). Eles já
+   aparecem na lista e entram no mapa pelo endereço exato desse commit (`raw.githubusercontent.com`), sem esperar
+   o GitHub Pages atualizar. Os outros jogadores também veem eles na lista.
 
-A ordem dos ângulos segue o `carro.json` da pasta (sem ele, a ordem dos nomes dos arquivos). Mandar de novo uma
-pasta com o mesmo nome atualiza o carro.
+Mandar de novo um carro com o mesmo nome substitui o antigo (os ângulos que sobrarem são apagados).
+
+**Apagar um carro:** com a chave salva, cada carro tem um **✕** no canto; dois cliques apagam a pasta dele do
+repositório (um commit). Pode levar uns minutos pra sumir do GitHub Pages, mas some da lista na hora.
 
 ## Onde hospedar imagens pesadas
 

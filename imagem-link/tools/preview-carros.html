@@ -28,7 +28,7 @@
       <div class="muted small">Clique num carro e depois clique no mapa onde ele vai ficar (Shift: vários; Esc cancela).
         Ele entra com todos os ângulos: botão direito no carro &rarr; <b>Girar</b>, ou "Change Image" do Changr.</div>
       <div class="row small" style="gap:6px;flex-wrap:wrap;margin:6px 0">
-        <button id="fromPC" type="button" title="Escolha a pasta que o botão Pacote Owlbear salvou (Downloads/carros/nome): vai direto pro repositório no GitHub e já aparece aqui.">＋ Carro do PC</button>
+        <button id="fromPC" type="button" title="Escolha uma pasta com um ou vários carros do Pacote Owlbear (pode ser a pasta onde caíram os downloads): a extensão separa cada carro, mostra pra conferir e manda pro GitHub.">＋ Carro do PC</button>
         <input id="folder" type="file" webkitdirectory multiple hidden />
       </div>
       <details id="ghBox" class="ghbox small">
@@ -46,7 +46,16 @@
           <button id="ghSave" type="button">Salvar</button>
           <button id="ghForget" type="button" hidden>Apagar</button>
         </div>
-      </details>      <div id="count" class="muted small"></div>
+      </details>
+      <div id="review" class="review hidden">
+        <div><b>Carros encontrados na pasta</b></div>
+        <div class="muted small">Desmarque o que não quer mandar. O nome pode ser trocado. A 1ª imagem é a que entra no mapa; clique numa imagem pra passar ela uma posição pra frente.</div>
+        <div id="rvList"></div>
+        <div class="row" style="gap:6px">
+          <button id="rvSend" type="button" class="primary">Enviar</button>
+          <button id="rvCancel" type="button">Cancelar</button>
+        </div>
+      </div>      <div id="count" class="muted small"></div>
       <div id="grid" class="pgrid cars"></div>
       <button id="reload" type="button">Atualizar a lista</button>
       <footer class="credit">Criado por: Lobynh</footer>
