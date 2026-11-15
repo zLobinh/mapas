@@ -259,15 +259,13 @@ export function labelsSVG(rect, labels, areas, pics, fontCss) {
   for (const l of [...labels].sort((a, b) => (order[a.kind] ?? 0) - (order[b.kind] ?? 0))) {
     const t = esc(l.text), fs = l.size, x = R(l.x), y = R(l.y);
     if (l.kind === "gym" || l.kind === "glaseado") {
-      const neon = l.kind === "glaseado" ? "#6fd8ff" : FUT.neon, f = fs * .78, w = R(l.text.length * f * .68 + f * 1.5), h = R(f * 1.55);
-      const pic = pics.ginasio, ph = h * 2.5, pw = pic ? ph * pic.w / pic.h : 0;
-      out += (pic ? `<image href="${pic.href}" x="${R(x - pw * .8)}" y="${R(y + h - ph * .92)}" width="${R(pw)}" height="${R(ph)}" style="image-rendering:pixelated"/>` : "")
-        + `<g transform="translate(${R(x + pw * .22)},${y})"><path d="M${R(h * .35)},0 H${w} l${R(h * .45)},${R(h / 2)} l${-R(h * .45)},${R(h / 2)} H${R(h * .35)} l${-R(h * .45)},${-R(h / 2)}Z" fill="${FUT.bg}" fill-opacity=".94" stroke="${neon}" stroke-width="${R(f * .09)}"/><text x="${R(w / 2 + h * .17)}" y="${R(h * .7)}" text-anchor="middle" font-family="Chakra Petch" font-weight="700" font-size="${R(f)}" fill="#eafff1" letter-spacing="${R(f * .07)}">${t.toUpperCase()}</text></g>`;
+      // no plate over the city's drawing: just the name, with a small neon gem in front
+      const neon = l.kind === "glaseado" ? "#6fd8ff" : FUT.neon, f = fs * .6, g = f * .42;
+      out += `<polygon points="${hexPts(x + g, y + f * .62, g)}" fill="${FUT.bg}" stroke="${neon}" stroke-width="${R(f * .12)}"/><polygon points="${hexPts(x + g, y + f * .62, g * .42)}" fill="${neon}"/>`
+        + `<text x="${R(x + g * 2.5)}" y="${R(y + f * .98)}" font-family="Chakra Petch" font-weight="700" font-size="${R(f)}" fill="#f2fff6" stroke="#0b1512" stroke-width="${R(f * .24)}" stroke-linejoin="round" paint-order="stroke" letter-spacing="${R(f * .08)}">${t.toUpperCase()}</text>`;
     } else if (l.kind === "town") {
-      const f = fs * .95, w = R(l.text.length * f * .5 + f * 1.4), h = R(f * 1.35);
-      const pic = pics.centro, ph = h * 2.3, pw = pic ? ph * pic.w / pic.h : 0;
-      out += (pic ? `<image href="${pic.href}" x="${R(x - pw * .85)}" y="${R(y + h - ph * .9)}" width="${R(pw)}" height="${R(ph)}" style="image-rendering:pixelated"/>` : "")
-        + `<g transform="translate(${R(x + pw * .2)},${y})"><path d="${brush(rnd, -R(f * .3), R(h / 2), w + R(f * .6), h, 0)}" fill="${PAST.paper}" stroke="${PAST.ink}" stroke-width="${R(f * .06)}" filter="url(#ink2)"/><text x="${R(w / 2)}" y="${R(h * .74)}" text-anchor="middle" font-family="Cormorant Garamond" font-style="italic" font-weight="700" font-size="${R(f)}" fill="${PAST.ink}">${t}</text></g>`;
+      const f = fs * .72;
+      out += `<text x="${x}" y="${R(y + f * .9)}" font-family="Cormorant Garamond" font-style="italic" font-weight="700" font-size="${R(f)}" fill="${PAST.paper}" stroke="${PAST.ink}" stroke-width="${R(f * .22)}" stroke-linejoin="round" paint-order="stroke">${t}</text>`;
     } else if (l.kind === "note") {
       out += `<text x="${x}" y="${R(y + fs)}" font-family="Cormorant Garamond" font-style="italic" font-weight="700" font-size="${R(fs * 1.2)}" fill="#fff3c4" stroke="#0b1020" stroke-width="${R(fs * .22)}" paint-order="stroke">${t}</text>`;
     } else {

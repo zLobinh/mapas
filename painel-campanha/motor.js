@@ -3,9 +3,9 @@
 // the scene pointing to them. The team's sprites are separate animated tokens placed on the card's sockets.
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready, gh, base64, slug, fold, commitTree, blobEntry, removeEntry, rawUrl } from "../imagem-link/gh.js?v=1.7.0";
-import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.0";
-import { sheetId, readTrainer } from "./planilha.js?v=0.3.0";
-import { readPaliga } from "./paliga.js?v=0.3.0";
+import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.1";
+import { sheetId, readTrainer } from "./planilha.js?v=0.3.1";
+import { readPaliga } from "./paliga.js?v=0.3.1";
 
 export const ID = "com.painel-campanha";
 const CONFIG = `${ID}/config`, STATE = `${ID}/estado`, ITEM = `${ID}/item`;
@@ -342,12 +342,12 @@ export async function syncLabels({ say = () => {} } = {}) {
     (i.type === "TEXT" && inside(i.position) && plain(i)) ||
     (i.type === "CURVE" && (i.points?.length ?? 0) >= 3 && inside({ x: i.position.x + i.points[0].x, y: i.position.y + i.points[0].y }))));
   if (!src.length) throw new Error("não achei textos nem áreas desenhadas em cima do mapa");
-  const labels = src.filter((i) => i.type === "TEXT").map((i) => ({ x: i.position.x, y: i.position.y, text: plain(i), kind: kindOf(i.text.style?.fillColor), size: (i.text.style?.fontSize ?? 60) * Math.abs(i.scale?.x ?? 1) * 1.3 })); // (a bit bigger than the GM wrote: plates read better)
+  const labels = src.filter((i) => i.type === "TEXT").map((i) => ({ x: i.position.x, y: i.position.y, text: plain(i), kind: kindOf(i.text.style?.fillColor), size: (i.text.style?.fontSize ?? 60) * Math.abs(i.scale?.x ?? 1) }));
   const areas = src.filter((i) => i.type === "CURVE").map((i) => ({ d: curvePath(i), kind: kindOf(i.style?.strokeColor) })).filter((x) => x.d);
   say(`Desenhando ${labels.length} nomes e ${areas.length} áreas…`);
-  const pics = { centro: await embed("predios/centro.png").catch(() => null), ginasio: await embed("predios/ginasio.png").catch(() => null) };
+  const pics = {}; // (no buildings beside the names: they covered the map's own drawing of the cities)
   const pic = await render(labelsSVG(rect, labels, areas, pics, await fontCss()), LABEL_PX / rect.w);
-  const sig = hash(JSON.stringify([DRAW_VERSION, rect, labels, areas]));
+  const sig = hash(JSON.stringify([DRAW_VERSION, "rotulos-2", rect, labels, areas]));
   const path = `painel/rotulos-${sig}.webp`;
   if (state.labels?.sig !== sig) {
     say(`Enviando os rótulos pro GitHub (${(pic.blob.size / 1048576).toFixed(1)} MB)…`);

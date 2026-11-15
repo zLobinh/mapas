@@ -2,7 +2,7 @@
 // whose data changed (nothing is sent when nothing changed).
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready } from "../imagem-link/gh.js?v=1.7.0";
-import { getConfig, syncCards } from "./motor.js?v=0.3.0";
+import { getConfig, syncCards } from "./motor.js?v=0.3.1";
 
 const EVERY = 5 * 60 * 1000;
 let busy = false;
