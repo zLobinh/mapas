@@ -3,9 +3,9 @@
 // the scene pointing to them. The team's sprites are separate animated tokens placed on the card's sockets.
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready, gh, base64, slug, fold, commitTree, blobEntry, removeEntry, rawUrl } from "../imagem-link/gh.js?v=1.7.0";
-import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots } from "./desenho.js?v=0.2.0";
-import { sheetId, readTrainer } from "./planilha.js?v=0.2.0";
-import { readPaliga } from "./paliga.js?v=0.2.0";
+import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.0";
+import { sheetId, readTrainer } from "./planilha.js?v=0.3.0";
+import { readPaliga } from "./paliga.js?v=0.3.0";
 
 export const ID = "com.painel-campanha";
 const CONFIG = `${ID}/config`, STATE = `${ID}/estado`, ITEM = `${ID}/item`;
@@ -288,7 +288,103 @@ export async function syncFrame({ say = () => {} } = {}) {
 
 // takes everything this extension placed out of the scene (the pictures stay in the repository)
 export async function clearScene() {
+  await editLabels(); // (the GM's own texts and areas come back from under the map)
   const ids = (await OBR.scene.items.getItems()).filter((i) => mine(i)).map((i) => i.id);
   if (ids.length) await OBR.scene.items.deleteItems(ids);
   return ids.length;
+}
+
+// ---- the map's labels: the GM's texts and area outlines (drawn with Owlbear's own tools) become one
+// picture in the campaign's look, with a building beside each place. The originals are kept: they go to
+// the Map layer UNDER the map (so nobody sees them twice), and "edit" brings them back.
+const SOURCE = `${ID}/fonte`;
+const LABEL_PX = 6000; // width of the labels' picture
+// what a text is, by the color the GM gave it
+function kindOf(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex || "");
+  if (!m) return "field";
+  const [r, g, b] = m.slice(1).map((v) => parseInt(v, 16)), max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0;
+  if (max !== min) h = max === r ? ((g - b) / (max - min)) % 6 : max === g ? (b - r) / (max - min) + 2 : (r - g) / (max - min) + 4;
+  h = (h * 60 + 360) % 360;
+  const light = (max + min) / 510;
+  if (h < 15 || h >= 335) return "gym";       // red: a city with a gym
+  if (h < 40) return "desert";                // orange: dunes, desert
+  if (h < 70) return "note";                  // yellow: small notes
+  if (h < 160) return light > 0.6 ? "town" : "field"; // light green: a city; dark green: fields and forests
+  if (h < 200) return "snow";                 // light blue: snow
+  return "glaseado";                          // dark blue: the gym with no city
+}
+const plain = (it) => (it.text?.plainText || (it.text?.richText ?? []).map((n) => (n.children ?? []).map((c) => c.text ?? "").join("")).join(" ")).trim();
+function curvePath(it) {
+  const rot = (it.rotation || 0) * Math.PI / 180, cos = Math.cos(rot), sin = Math.sin(rot), sx = it.scale?.x ?? 1, sy = it.scale?.y ?? 1;
+  const pts = (it.points ?? []).map((p) => { const x = p.x * sx, y = p.y * sy; return [it.position.x + x * cos - y * sin, it.position.y + x * sin + y * cos]; });
+  if (pts.length < 3) return "";
+  const k = (it.style?.tension ?? 0) / 2, n = pts.length, f = (v) => Math.round(v);
+  if (!k) return "M" + pts.map((p) => p.map(f).join(",")).join("L") + "Z";
+  // smooth, like Owlbear draws a curve with tension
+  let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    d += `C${f(p1[0] + (p2[0] - p0[0]) * k)},${f(p1[1] + (p2[1] - p0[1]) * k)} ${f(p2[0] - (p3[0] - p1[0]) * k)},${f(p2[1] - (p3[1] - p1[1]) * k)} ${f(p2[0])},${f(p2[1])}`;
+  }
+  return d + "Z";
+}
+
+export async function syncLabels({ say = () => {} } = {}) {
+  if (!ready()) throw new Error("configure o seu repositório e a chave em ⚙ GitHub");
+  const state = await getState(), lay = await layout();
+  const a = lay.at(MAP.x, MAP.y), b = lay.at(MAP.x + MAP.w, MAP.y + MAP.h);
+  const rect = { x: Math.round(a.x), y: Math.round(a.y), w: Math.round(b.x - a.x), h: Math.round(b.y - a.y) };
+  const inside = (p) => p.x >= rect.x - 200 && p.x <= rect.x + rect.w + 200 && p.y >= rect.y - 200 && p.y <= rect.y + rect.h + 200;
+  // the sources: texts and closed curves on the map (already taken before, or still on their layers)
+  const src = lay.items.filter((i) => !mine(i) && (i.metadata?.[SOURCE] || i.visible !== false) && (
+    (i.type === "TEXT" && inside(i.position) && plain(i)) ||
+    (i.type === "CURVE" && (i.points?.length ?? 0) >= 3 && inside({ x: i.position.x + i.points[0].x, y: i.position.y + i.points[0].y }))));
+  if (!src.length) throw new Error("não achei textos nem áreas desenhadas em cima do mapa");
+  const labels = src.filter((i) => i.type === "TEXT").map((i) => ({ x: i.position.x, y: i.position.y, text: plain(i), kind: kindOf(i.text.style?.fillColor), size: (i.text.style?.fontSize ?? 60) * Math.abs(i.scale?.x ?? 1) * 1.3 })); // (a bit bigger than the GM wrote: plates read better)
+  const areas = src.filter((i) => i.type === "CURVE").map((i) => ({ d: curvePath(i), kind: kindOf(i.style?.strokeColor) })).filter((x) => x.d);
+  say(`Desenhando ${labels.length} nomes e ${areas.length} áreas…`);
+  const pics = { centro: await embed("predios/centro.png").catch(() => null), ginasio: await embed("predios/ginasio.png").catch(() => null) };
+  const pic = await render(labelsSVG(rect, labels, areas, pics, await fontCss()), LABEL_PX / rect.w);
+  const sig = hash(JSON.stringify([DRAW_VERSION, rect, labels, areas]));
+  const path = `painel/rotulos-${sig}.webp`;
+  if (state.labels?.sig !== sig) {
+    say(`Enviando os rótulos pro GitHub (${(pic.blob.size / 1048576).toFixed(1)} MB)…`);
+    const sha = await commitTree("Painel: rótulos do mapa", async () => {
+      const blob = await gh("/git/blobs", { content: await base64(pic.blob), encoding: "base64" });
+      const tree = [blobEntry(path, blob.sha)];
+      if (state.labels?.path && state.labels.path !== path) tree.push(removeEntry(state.labels.path));
+      return tree;
+    }, say);
+    state.labels = { sig, path, url: rawUrl(sha, path), width: pic.width, height: pic.height };
+    await setState(state);
+  }
+  const st = state.labels, image = { url: st.url, mime: "image/webp", width: st.width, height: st.height };
+  const item = lay.items.find((i) => mine(i, "labels"));
+  if (item) await OBR.scene.items.updateItems([item.id], (l) => { for (const it of l) { it.image = image; it.visible = true; } });
+  else {
+    await OBR.scene.items.addItems([buildImage(image, { dpi: st.width * lay.dpi / rect.w, offset: { x: st.width / 2, y: st.height / 2 } })
+      .position({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }).layer("MAP").zIndex(lay.map.zIndex + 2).locked(true).disableHit(true)
+      .name("Rótulos do mapa").metadata({ [ITEM]: { kind: "labels" } }).build()]);
+  }
+  // the originals go under the map (remembering their layer), so they aren't seen twice
+  await OBR.scene.items.updateItems(src.map((i) => i.id), (l) => {
+    for (const it of l) {
+      if (!it.metadata[SOURCE]) it.metadata[SOURCE] = { layer: it.layer, zIndex: it.zIndex, locked: !!it.locked };
+      it.layer = "MAP"; it.zIndex = lay.map.zIndex - 10; it.locked = true;
+    }
+  });
+  return { labels: labels.length, areas: areas.length };
+}
+// the originals come back to be edited (the styled picture hides meanwhile)
+export async function editLabels() {
+  const items = await OBR.scene.items.getItems();
+  const src = items.filter((i) => i.metadata?.[SOURCE]);
+  await OBR.scene.items.updateItems(src.map((i) => i.id), (l) => {
+    for (const it of l) { const s = it.metadata[SOURCE]; it.layer = s.layer; it.zIndex = s.zIndex; it.locked = s.locked; delete it.metadata[SOURCE]; }
+  });
+  const pic = items.filter((i) => mine(i, "labels")).map((i) => i.id);
+  if (pic.length) await OBR.scene.items.updateItems(pic, (l) => { for (const it of l) it.visible = false; });
+  return src.length;
 }

@@ -1,8 +1,8 @@
 // The panel's page: the GM sets the sheet and the players (tab, look, portrait) and presses the buttons.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { wireKeyBox, needKey } from "../imagem-link/gh.js?v=1.7.0";
-import { ESTILOS } from "./desenho.js?v=0.2.0";
-import { getConfig, setConfig, syncCards, syncFrame, clearScene } from "./motor.js?v=0.2.0";
+import { ESTILOS } from "./desenho.js?v=0.3.0";
+import { getConfig, setConfig, syncCards, syncFrame, syncLabels, editLabels, clearScene } from "./motor.js?v=0.3.0";
 
 const $ = (id) => document.getElementById(id);
 const say = (t, kind = "") => { $("status").textContent = t || ""; $("status").className = `status small ${kind || "muted"}`; };
@@ -79,6 +79,11 @@ $("cards").onclick = () => run($("cards"), async () => {
   if (r.notes?.length) say(`${$("status").textContent} ${r.notes.join("; ")}.`, "warn");
 });
 $("frame").onclick = () => run($("frame"), async () => { await syncFrame({ say: (t) => say(t) }); say("✓ Moldura do mapa na cena.", "ok"); });
+$("labels").onclick = () => run($("labels"), async () => { const r = await syncLabels({ say: (t) => say(t) }); say(`✓ ${r.labels} nomes e ${r.areas} áreas no visual da campanha.`, "ok"); });
+$("editLabels").onclick = async () => {
+  try { const n = await editLabels(); say(n ? `${n} textos e áreas originais de volta pra editar. Quando terminar, estilize de novo.` : "Não há nada estilizado pra voltar."); }
+  catch (err) { say(`Não deu certo: ${err.message}`, "bad"); }
+};
 $("clear").onclick = async () => {
   const b = $("clear");
   if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tirar mesmo? (clique de novo)"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "Tirar o painel da cena"; }, 3000); return; }

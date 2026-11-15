@@ -1,15 +1,15 @@
 {
   "name": "Painel da Campanha",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "manifest_version": 1,
   "author": "Lobynh",
   "description": "Cartões dos treinadores (iguais às fichas da planilha) e moldura do mapa.",
   "icon": "/mapas/painel-campanha/icon.svg",
-  "background_url": "/mapas/painel-campanha/background.html?v=0.2.0",
+  "background_url": "/mapas/painel-campanha/background.html?v=0.3.0",
   "action": {
     "title": "Painel da Campanha",
     "icon": "/mapas/painel-campanha/icon.svg",
-    "popover": "/mapas/painel-campanha/index.html?v=0.2.0",
+    "popover": "/mapas/painel-campanha/index.html?v=0.3.0",
     "width": 380,
     "height": 620
   }

@@ -8,6 +8,7 @@ export const FRAME = { x: -9150, y: -4750, w: 15150, h: 9250 };
 
 export const ESTILOS = {
   "futuro-verde": { nome: "Futuro (verde)", era: "fut", bg: "#0d1411", panel: "#131d18", neon: "#63f59b", neon2: "#b6ffd0", grey: "#2a3a32" },
+  "futuro-fenda": { nome: "Futuro (fenda dimensional)", era: "fut", rift: true, bg: "#0c1114", panel: "#111c1c", neon: "#63f59b", neon2: "#c9ffe0", grey: "#2a3a36" },
   "futuro-ciano": { nome: "Futuro (ciano)", era: "fut", bg: "#0b1216", panel: "#101b22", neon: "#4fd6ff", neon2: "#c2f1ff", grey: "#263842" },
   "passado": { nome: "Passado (papel claro)", era: "past", ink: "#1b2a41", paper: "#e9e2cf", paper2: "#d8cfb6", seal: "#b5362d", light: "#efe8d6", sub: "#1b2a41", line: "#1b2a41", stain: "#8d7d5c" },
   "passado-escuro": { nome: "Passado escuro (com brilho)", era: "past", dark: true, glow: true, ink: "#07080f", paper: "#252a3b", paper2: "#3a4159", seal: "#c79a3c", light: "#f1e7cc", sub: "#b9b3a0", line: "#8a8676", stain: "#0c0e16" },
@@ -54,6 +55,26 @@ function brush(rnd, x, y, w, h, tilt = -0.04) {
   return top + bot + "Z";
 }
 const star = (x, y, r) => `M${x},${y - r} L${x + r * .22},${y - r * .22} L${x + r},${y} L${x + r * .22},${y + r * .22} L${x},${y + r} L${x - r * .22},${y + r * .22} L${x - r},${y} L${x - r * .22},${y - r * .22}Z`;
+
+// a dimensional tear: bright core, rings bending out of shape, and shards of crystal left behind
+function wormhole(rnd, cx, cy) {
+  const cols = ["#ffffff", "#9ff3ff", "#57b4ff", "#8f6bff", "#d264ff", "#ff6bd0"];
+  let rings = "";
+  for (let i = 0; i < 9; i++) {
+    const r = 150 + i * 92, n = 28;
+    let d = "";
+    for (let j = 0; j <= n; j++) { const a = (j / n) * Math.PI * 2, w = 1 + Math.sin(a * 3 + i * .9) * .07 + (rnd() - .5) * .05; d += `${j ? "L" : "M"}${R(cx + Math.cos(a) * r * w * 1.02)},${R(cy + Math.sin(a) * r * w * .86)}`; }
+    rings += `<path d="${d}Z" fill="none" stroke="${cols[Math.min(cols.length - 1, 1 + (i >> 1))]}" stroke-width="${R(26 - i * 2)}" opacity="${(.85 - i * .08).toFixed(2)}" transform="rotate(${-18 + i * 4} ${cx} ${cy})"/>`;
+  }
+  let shards = "";
+  for (let i = 0; i < 11; i++) {
+    const a = rnd() * Math.PI * 2, dist = 520 + rnd() * 420, x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * .9, s = 46 + rnd() * 80, rot = R(rnd() * 360);
+    shards += `<g transform="translate(${R(x)},${R(y)}) rotate(${rot})"><polygon points="0,${-R(s)} ${R(s * .42)},0 0,${R(s * .7)} ${-R(s * .42)},0" fill="#bff6ff" opacity=".9"/><polygon points="0,${-R(s)} ${R(s * .42)},0 0,${R(s * .7)}" fill="#8f6bff" opacity=".75"/><polygon points="0,${-R(s)} ${-R(s * .42)},0 0,${-R(s * .1)}" fill="#fff" opacity=".8"/></g>`;
+  }
+  return `<circle cx="${cx}" cy="${cy}" r="760" fill="#6a4bff" opacity=".28" filter="url(#soft)"/><circle cx="${cx}" cy="${cy}" r="330" fill="#9ff3ff" opacity=".5" filter="url(#soft)"/>
+    <g filter="url(#ink2)">${rings}</g><g opacity=".55" filter="url(#glow)">${rings}</g>
+    <ellipse cx="${cx}" cy="${cy}" rx="150" ry="128" fill="#fff" opacity=".92" filter="url(#glow)"/>${shards}`;
+}
 
 // the filters and patterns every drawing uses
 function defsBase(neon = FUT.neon, stain = PAST.stain) {
@@ -146,7 +167,7 @@ export function cardSVG(d, estilo, portrait, fontCss, opts = {}) {
       <path d="${body}" fill="none" stroke="${S.neon}" stroke-width="40" opacity=".35" filter="url(#glow)"/><path d="${body}" fill="none" stroke="${S.neon}" stroke-width="10"/>
       <g clip-path="url(#win)"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="url(#skyf)"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="url(#hex)" opacity=".7"/>${lines}
         <circle cx="${cx}" cy="${cy}" r="560" fill="${S.neon}" opacity=".16" filter="url(#soft)"/>
-        <polygon points="${hexPts(cx, cy, 720)}" fill="none" stroke="${S.neon}" stroke-width="26" opacity=".85"/><polygon points="${hexPts(cx, cy, 820)}" fill="none" stroke="${S.neon2}" stroke-width="6" opacity=".6"/>
+        ${S.rift ? wormhole(rnd, cx, cy - 40) : `<polygon points="${hexPts(cx, cy, 720)}" fill="none" stroke="${S.neon}" stroke-width="26" opacity=".85"/><polygon points="${hexPts(cx, cy, 820)}" fill="none" stroke="${S.neon2}" stroke-width="6" opacity=".6"/>`}
         <path d="M${px + 60},${py + ph - 520} l150,-150 M${px + 60},${py + ph - 400} l270,-270 M${px + pw - 60},${py + 520} l-150,150 M${px + pw - 60},${py + 400} l-270,270" stroke="${S.neon}" stroke-width="16" opacity=".5"/>
         ${pic}<rect x="${px}" y="${py + ph - 380}" width="${pw}" height="380" fill="url(#fade)"/></g>
       <path d="${fr}" fill="none" stroke="${S.neon2}" stroke-width="9"/>
@@ -219,4 +240,40 @@ export function frameSVG(t, fontCss) {
     </g>
   </g>`;
   return { svg: wrap(X0, Y0, W, H, fontCss, body), w: W, h: H };
+}
+
+// ---- the map's dressing: the GM's own texts and area outlines, redrawn in the campaign's look, with a
+// building beside each place. One transparent picture the size of the map, in SCENE coordinates.
+// rect: { x, y, w, h } of the map; labels: [{ x, y, text, kind, size }]; areas: [{ d, kind }];
+// pics: { centro, ginasio } = { href, w, h }. Kinds: gym, glaseado, town, field, desert, snow, note.
+const AREA = { field: "#7ed957", desert: "#ff9a4d", snow: "#6fe6f5", other: "#cfd6e6" };
+export function labelsSVG(rect, labels, areas, pics, fontCss) {
+  const rnd = rng("rotulos");
+  let out = "";
+  for (const a of areas) {
+    const c = AREA[a.kind] ?? AREA.other;
+    out += `<path d="${a.d}" fill="${c}" fill-opacity=".09" stroke="#0b1020" stroke-width="20" stroke-opacity=".45" stroke-linejoin="round"/><path d="${a.d}" fill="none" stroke="${c}" stroke-width="9" stroke-dasharray="44 24" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".95"/>`;
+  }
+  // areas' names first (under the places), then the places
+  const order = { field: 0, desert: 0, snow: 0, note: 1, town: 2, gym: 3, glaseado: 3 };
+  for (const l of [...labels].sort((a, b) => (order[a.kind] ?? 0) - (order[b.kind] ?? 0))) {
+    const t = esc(l.text), fs = l.size, x = R(l.x), y = R(l.y);
+    if (l.kind === "gym" || l.kind === "glaseado") {
+      const neon = l.kind === "glaseado" ? "#6fd8ff" : FUT.neon, f = fs * .78, w = R(l.text.length * f * .68 + f * 1.5), h = R(f * 1.55);
+      const pic = pics.ginasio, ph = h * 2.5, pw = pic ? ph * pic.w / pic.h : 0;
+      out += (pic ? `<image href="${pic.href}" x="${R(x - pw * .8)}" y="${R(y + h - ph * .92)}" width="${R(pw)}" height="${R(ph)}" style="image-rendering:pixelated"/>` : "")
+        + `<g transform="translate(${R(x + pw * .22)},${y})"><path d="M${R(h * .35)},0 H${w} l${R(h * .45)},${R(h / 2)} l${-R(h * .45)},${R(h / 2)} H${R(h * .35)} l${-R(h * .45)},${-R(h / 2)}Z" fill="${FUT.bg}" fill-opacity=".94" stroke="${neon}" stroke-width="${R(f * .09)}"/><text x="${R(w / 2 + h * .17)}" y="${R(h * .7)}" text-anchor="middle" font-family="Chakra Petch" font-weight="700" font-size="${R(f)}" fill="#eafff1" letter-spacing="${R(f * .07)}">${t.toUpperCase()}</text></g>`;
+    } else if (l.kind === "town") {
+      const f = fs * .95, w = R(l.text.length * f * .5 + f * 1.4), h = R(f * 1.35);
+      const pic = pics.centro, ph = h * 2.3, pw = pic ? ph * pic.w / pic.h : 0;
+      out += (pic ? `<image href="${pic.href}" x="${R(x - pw * .85)}" y="${R(y + h - ph * .9)}" width="${R(pw)}" height="${R(ph)}" style="image-rendering:pixelated"/>` : "")
+        + `<g transform="translate(${R(x + pw * .2)},${y})"><path d="${brush(rnd, -R(f * .3), R(h / 2), w + R(f * .6), h, 0)}" fill="${PAST.paper}" stroke="${PAST.ink}" stroke-width="${R(f * .06)}" filter="url(#ink2)"/><text x="${R(w / 2)}" y="${R(h * .74)}" text-anchor="middle" font-family="Cormorant Garamond" font-style="italic" font-weight="700" font-size="${R(f)}" fill="${PAST.ink}">${t}</text></g>`;
+    } else if (l.kind === "note") {
+      out += `<text x="${x}" y="${R(y + fs)}" font-family="Cormorant Garamond" font-style="italic" font-weight="700" font-size="${R(fs * 1.2)}" fill="#fff3c4" stroke="#0b1020" stroke-width="${R(fs * .22)}" paint-order="stroke">${t}</text>`;
+    } else {
+      const c = AREA[l.kind] ?? AREA.other, f = fs * .7;
+      out += `<text x="${x}" y="${R(y + f)}" font-family="Chakra Petch" font-weight="700" font-size="${R(f)}" fill="${c}" stroke="#0b1020" stroke-width="${R(f * .2)}" paint-order="stroke" letter-spacing="${R(f * .1)}" opacity=".95">${t.toUpperCase()}</text>`;
+    }
+  }
+  return { svg: wrap(rect.x, rect.y, rect.w, rect.h, fontCss, `<defs>${defsBase()}</defs>${out}`), w: rect.w, h: rect.h };
 }

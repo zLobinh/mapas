@@ -49,9 +49,27 @@ que o site aplica). O treinador é achado pelo nome da ficha (ou pelo "Nome na P
 diferente). Quem não for achado continua com a equipe da planilha. Formas regionais ("Vulpix de Alola") usam o
 sprite da forma.
 
+### Nomes e áreas do mapa
+
+**Estilizar os nomes e áreas do mapa** redesenha, no visual da campanha, os textos e as áreas que você mesmo fez
+com as ferramentas do Owlbear, e põe um prédio ao lado de cada cidade. A cor do texto (ou do contorno) diz o que
+ele é:
+
+| Cor | O que é | Como fica |
+|---|---|---|
+| vermelho | cidade com ginásio | placa neon + ginásio |
+| verde claro | cidade sem ginásio | faixa de papel + Centro Pokémon |
+| azul escuro | ginásio sem cidade | placa neon azul + ginásio |
+| verde escuro / laranja / azul claro | campos e florestas / dunas e deserto / neve | nome e contorno tracejado da cor |
+| amarelo | anotação | letra de pincel |
+
+Os originais não são apagados: vão pra baixo do mapa. **Voltar a editar os nomes e áreas** traz eles de volta
+(e esconde a versão estilizada); depois de mexer, é só estilizar de novo. Os prédios vêm de `predios/`.
+
 ### Visuais
 
 - **Futuro (verde / ciano)**: neon e hexágonos.
+- **Futuro (fenda dimensional)**: uma fenda entre dimensões atrás do treinador, com cacos de cristal.
 - **Passado (papel claro)**: tinta e papel.
 - **Passado escuro (com brilho)**: papel escuro, lua e faíscas douradas.
 - **Passado frio (relógio)**: papel acinzentado, um relógio ao fundo e um fio de rachadura no canto.
