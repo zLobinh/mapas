@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel da Campanha</title>
+    <link rel="stylesheet" href="../imagem-link/style.css?v=1.7.0" />
+    <style>
+      .pl { padding: 8px; border-radius: 8px; background: var(--panel); margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .pl .wide { grid-column: 1 / -1; }
+      .pl label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); }
+      .pl input, .pl select, select { padding: 5px 7px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; width: 100%; }
+      .pl .rm { justify-self: end; padding: 2px 8px; }
+      .btns { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+      h2 { font-size: 14px; margin: 16px 0 2px; }
+      #alias .row { margin-top: 4px; }
+      #alias b { min-width: 90px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Painel da Campanha</h1>
+      <p class="muted small">Monta os cartões dos treinadores e a moldura do mapa, e mantém os cartões iguais às fichas da planilha.</p>
+      <div id="status" class="status muted small"></div>
+
+      <div id="gm">
+        <label class="field">
+          <span>Planilha das fichas (link)</span>
+          <input id="sheet" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" />
+        </label>
+        <div class="muted small">Ela precisa estar compartilhada como "qualquer pessoa com o link pode ver". Cada jogador é uma aba.</div>
+
+        <h2>Jogadores</h2>
+        <div id="players"></div>
+        <button id="addPlayer" type="button" style="margin-top:6px">＋ Jogador</button>
+
+        <div id="aliasBox" class="hidden">
+          <h2>Pokémon com apelido</h2>
+          <div class="muted small">Não achei estes nomes na biblioteca de sprites. Escreva a espécie (ex.: Ninetales) ou cole o link de uma imagem.</div>
+          <div id="alias"></div>
+        </div>
+
+        <div class="btns">
+          <button id="cards" class="primary" type="button">Atualizar cartões</button>
+          <button id="frame" type="button">Montar a moldura do mapa</button>
+          <label class="check small"><input id="auto" type="checkbox" /> Conferir a planilha sozinho a cada 5 minutos</label>
+          <button id="clear" type="button">Tirar o painel da cena</button>
+        </div>
+
+        <details id="ghBox" class="ghbox small">
+          <summary>⚙ GitHub <span id="ghState" class="muted"></span></summary>
+          <div class="muted">As imagens do painel vão pro <b>seu repositório</b> do GitHub (o mesmo da Imagem por Link). O repositório e a chave ficam <b>só neste navegador</b>.</div>
+          <ol class="muted">
+            <li>Um repositório <b>público</b> seu, com pelo menos um arquivo.</li>
+            <li>Uma chave <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained</a> só pra ele, com <i>Contents</i>: <b>Read and write</b>.</li>
+          </ol>
+          <input id="ghRepo" type="text" placeholder="seu-usuario/owlbear-imagens" autocomplete="off" style="margin-bottom:6px" />
+          <div class="row" style="gap:6px">
+            <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off" style="flex:1" />
+            <button id="ghSave" type="button">Salvar</button>
+            <button id="ghForget" type="button" hidden>Apagar</button>
+          </div>
+        </details>
+      </div>
+      <footer class="credit">Criado por: Lobynh</footer>
+    </main>
+    <script type="module" src="painel.js?v=0.1.0"></script>
+  </body>
+</html>

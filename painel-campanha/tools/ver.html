@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8" /><title>ver</title>
+<script type="importmap">{ "imports": { "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm": "./mock.js" } }</script>
+<style>body { margin: 0; background: #555; display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; align-items: flex-start } img { display: block } #log { color: #fff; font: 12px monospace; width: 100% }</style>
+<div id="log">…</div>
+<script type="module">
+// Draws the real thing (sheet -> cards, and the frame) to pictures on this page, without GitHub or Owlbear.
+//   ver.html            the 4 cards        ver.html?moldura     the frame
+import { cardSVG, frameSVG } from "../desenho.js?v=0.1.0";
+import { fontCss, embed, render } from "../motor.js?v=0.1.0";
+import { readTrainer } from "../planilha.js?v=0.1.0";
+const log = (t) => (document.getElementById("log").textContent = t);
+const SHEET = "1gkkZDdy6u9rUb8vi8IUX_PCuebiNRtoeNsXrNG7aJ7Y";
+const P = [["Lyra", "passado-escuro", "retratos/lyra.webp", 1, 0], ["Noah", "futuro-verde", "retratos/noah.webp", 1.25, 0], ["Alexandre", "passado-frio", "retratos/alexandre.webp", 1, 60], ["Victor", "futuro-ciano", "retratos/victor.webp", 1.15, 0]];
+try {
+  const css = await fontCss();
+  const show = async (d, s) => { const t0 = performance.now(); const pic = await render(d, s); const i = new Image(); i.src = URL.createObjectURL(pic.blob); i.style.width = new URLSearchParams(location.search).get("w") || "auto"; document.body.append(i); return `${pic.width}x${pic.height} ${(pic.blob.size / 1024).toFixed(0)} KB ${(performance.now() - t0).toFixed(0)} ms`; };
+  const out = [];
+  if (location.search.includes("moldura")) out.push(await show(frameSVG({}, css), 0.26));
+  else for (const [tab, estilo, retrato, zoom, dy] of P) {
+    const d = await readTrainer(SHEET, tab);
+    out.push(`${d.name} | ${d.sub} | ₽${d.money} | ${d.badges.map((b) => (b ? 1 : 0)).join("")} | ${d.team.map((t) => t.name).join(",")} | ` + await show(cardSVG(d, estilo, await embed(retrato), css, { zoom, dy }), 0.25));
+  }
+  log(out.join("  ||  "));
+  window.__done = true;
+} catch (e) { log("ERRO: " + e.message + " " + e.stack); }
+</script>
