@@ -6,12 +6,12 @@
 <script type="module">
 // Draws the real thing (sheet -> cards, and the frame) to pictures on this page, without GitHub or Owlbear.
 //   ver.html            the 4 cards        ver.html?moldura     the frame
-import { cardSVG, frameSVG } from "../desenho.js?v=0.1.0";
-import { fontCss, embed, render } from "../motor.js?v=0.1.0";
-import { readTrainer } from "../planilha.js?v=0.1.0";
+import { cardSVG, frameSVG } from "../desenho.js?v=0.2.0";
+import { fontCss, embed, render } from "../motor.js?v=0.2.0";
+import { readTrainer } from "../planilha.js?v=0.2.0";
 const log = (t) => (document.getElementById("log").textContent = t);
 const SHEET = "1gkkZDdy6u9rUb8vi8IUX_PCuebiNRtoeNsXrNG7aJ7Y";
-const P = [["Lyra", "passado-escuro", "retratos/lyra.webp", 1, 0], ["Noah", "futuro-verde", "retratos/noah.webp", 1.25, 0], ["Alexandre", "passado-frio", "retratos/alexandre.webp", 1, 60], ["Victor", "futuro-ciano", "retratos/victor.webp", 1.15, 0]];
+const P = [["Lyra", "passado-escuro", "retratos/lyra.png", 1.45, -60], ["Noah", "futuro-verde", "retratos/noah.png", 1.3, -40], ["Alexandre", "passado-frio", "retratos/alexandre.png", 1.05, 60], ["Victor", "futuro-ciano", "retratos/victor.png", 1.75, 20]];
 try {
   const css = await fontCss();
   const show = async (d, s) => { const t0 = performance.now(); const pic = await render(d, s); const i = new Image(); i.src = URL.createObjectURL(pic.blob); i.style.width = new URLSearchParams(location.search).get("w") || "auto"; document.body.append(i); return `${pic.width}x${pic.height} ${(pic.blob.size / 1024).toFixed(0)} KB ${(performance.now() - t0).toFixed(0)} ms`; };

@@ -31,6 +31,12 @@
         </label>
         <div class="muted small">Ela precisa estar compartilhada como "qualquer pessoa com o link pode ver". Cada jogador é uma aba.</div>
 
+        <label class="field">
+          <span>Site da PA Liga (link, opcional)</span>
+          <input id="paliga" type="url" placeholder="https://usuario.github.io/paliga/" autocomplete="off" />
+        </label>
+        <div class="muted small">Com o site dos jogadores da PA Liga, a equipe do cartão é o time atual do treinador lá (inclusive as trocas que o jogador faz online). Sem ele, vem da lista "Tera" da ficha.</div>
+
         <h2>Jogadores</h2>
         <div id="players"></div>
         <button id="addPlayer" type="button" style="margin-top:6px">＋ Jogador</button>
@@ -65,6 +71,6 @@
       </div>
       <footer class="credit">Criado por: Lobynh</footer>
     </main>
-    <script type="module" src="../painel.js?v=0.1.0"></script>
+    <script type="module" src="../painel.js?v=0.2.0"></script>
   </body>
 </html>

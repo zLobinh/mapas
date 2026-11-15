@@ -3,8 +3,9 @@
 // the scene pointing to them. The team's sprites are separate animated tokens placed on the card's sockets.
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready, gh, base64, slug, fold, commitTree, blobEntry, removeEntry, rawUrl } from "../imagem-link/gh.js?v=1.7.0";
-import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots } from "./desenho.js?v=0.1.0";
-import { sheetId, readTrainer } from "./planilha.js?v=0.1.0";
+import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots } from "./desenho.js?v=0.2.0";
+import { sheetId, readTrainer } from "./planilha.js?v=0.2.0";
+import { readPaliga } from "./paliga.js?v=0.2.0";
 
 export const ID = "com.painel-campanha";
 const CONFIG = `${ID}/config`, STATE = `${ID}/estado`, ITEM = `${ID}/item`;
@@ -16,7 +17,7 @@ const HERE = new URL(".", import.meta.url);
 // aliases: { "Snow": "Ninetales" | "https://..." }, title: [a, b, c], auto }
 export async function getConfig() {
   const m = await OBR.room.getMetadata();
-  return { sheet: "", players: [], aliases: {}, title: ["POKÉMON", "Além do", "HORIZONTE"], auto: true, ...(m[CONFIG] ?? {}) };
+  return { sheet: "", paliga: "", players: [], aliases: {}, title: ["POKÉMON", "Além do", "HORIZONTE"], auto: true, ...(m[CONFIG] ?? {}) };
 }
 export const setConfig = (c) => OBR.room.setMetadata({ [CONFIG]: c });
 const getState = async () => ({ cards: {}, frame: null, ...((await OBR.room.getMetadata())[STATE] ?? {}) });
@@ -139,8 +140,17 @@ async function spriteOf(name, aliases) {
     return size ? { url: key, ...size } : null;
   }
   const idx = await spriteIndex(), k = fold(key).trim();
-  const hits = idx.filter((e) => fold(e.n) === k);
-  const e = hits.find((x) => !x.v) ?? hits[0];
+  let hits = idx.filter((e) => fold(e.n) === k);
+  let e = hits.find((x) => !x.v) ?? hits[0];
+  if (!e) {
+    // regional forms: "Vulpix de Alola", "Zorua Hisui", "Alolan Vulpix"
+    const m = k.match(/^(.+?)\s+(?:de\s+|d[eo]\s+)?(alola|galar|hisui|paldea)$/) ?? k.match(/^(alola|galar|hisui|paldea)n?(?:ian)?\s+(.+)$/);
+    if (m) {
+      const [base, region] = /^(alola|galar|hisui|paldea)$/.test(m[1]) ? [m[2], m[1]] : [m[1], m[2]];
+      hits = idx.filter((x) => fold(x.n) === base && fold(x.v).includes(region));
+      e = hits[0];
+    }
+  }
   return e ? { url: new URL(`../pokemon/${e.f}`, HERE).href, w: e.w, h: e.h } : null;
 }
 
@@ -154,16 +164,28 @@ export async function syncCards({ say = () => {}, force = false } = {}) {
   const state = await getState();
   const lay = await layout();
   const css = await fontCss();
-  const jobs = [], missing = new Set(), datas = {};
+  const jobs = [], missing = new Set(), datas = {}, notes = [];
+  // the PA Liga, when its site is set: the team on the card is the trainer's current one there
+  let liga = null;
+  if (cfg.paliga) {
+    say("Lendo os times da PA Liga…");
+    liga = await readPaliga(cfg.paliga).catch((err) => { notes.push(`PA Liga: ${err.message} (usei a equipe da planilha)`); return null; });
+  }
   for (const p of cfg.players) {
     say(`Lendo a ficha de ${p.tab}…`);
     const d = await readTrainer(id, p.tab);
     datas[p.tab] = d;
+    if (liga) {
+      const tr = liga.find(p.paliga || d.name) ?? liga.find(p.tab);
+      if (tr) d.team = tr.team.slice(0, 6).map((m) => ({ name: m.name, role: m.role }));
+      else notes.push(`PA Liga: não achei o treinador de ${d.name} (usei a equipe da planilha)`);
+    }
     const sig = hash(JSON.stringify([DRAW_VERSION, d.name, d.sub, d.money, d.badges, p.estilo, p.retrato, p.zoom, p.dx, p.dy, cfg.badges]));
     const item = lay.items.find((i) => mine(i, "card") && i.metadata[ITEM].tab === p.tab);
     if (!force && item && state.cards[p.tab]?.sig === sig) continue;
     say(`Desenhando o cartão de ${d.name}…`);
-    const portrait = p.retrato ? await embed(p.retrato) : null;
+    // no link given: the extension's own retratos/<aba>.png, when there is one
+    const portrait = p.retrato ? await embed(p.retrato) : await embed(`retratos/${slug(p.tab)}.png`).catch(() => null);
     const badgePics = cfg.badges?.length === 8 ? await Promise.all(cfg.badges.map((u) => embed(u).then((x) => x.href))) : null;
     const pic = await render(cardSVG(d, p.estilo, portrait, css, { zoom: Number(p.zoom) || 1, dx: Number(p.dx) || 0, dy: Number(p.dy) || 0, badgePics }), CARD_SCALE);
     jobs.push({ p, d, sig, pic, path: `painel/cartao-${slug(p.tab)}-${sig}.webp` });
@@ -202,18 +224,24 @@ export async function syncCards({ say = () => {}, force = false } = {}) {
     }
   }
   if (add.length) await OBR.scene.items.addItems(add);
-  // the team: fresh sprites on the sockets of each card
+  // the team: sprites on the sockets of each card (a card whose team didn't change keeps its sprites)
   const now = await OBR.scene.items.getItems();
-  const oldSprites = now.filter((i) => mine(i, "poke")).map((i) => i.id);
+  const oldSprites = [];
   const sprites = [];
   for (const p of cfg.players) {
     const card = now.find((i) => mine(i, "card") && i.metadata[ITEM].tab === p.tab), d = datas[p.tab];
     if (!card || !d) continue;
     const unit = (card.image.width / card.grid.dpi) * lay.dpi * Math.abs(card.scale.x) / (CARD.w + CARD.pad * 2); // scene px per design unit
     const slots = teamSlots();
+    const found = [];
     for (const [j, mon] of d.team.entries()) {
       const sp = await spriteOf(mon.name, cfg.aliases);
-      if (!sp) { missing.add(mon.name); continue; }
+      if (!sp) missing.add(mon.name); else found.push({ j, mon, sp });
+    }
+    const have = now.filter((i) => mine(i, "poke") && i.metadata[ITEM].tab === p.tab).sort((a, b) => a.metadata[ITEM].slot - b.metadata[ITEM].slot);
+    if (have.length === found.length && have.every((it, n) => it.image.url === found[n].sp.url && it.metadata[ITEM].slot === found[n].j)) continue;
+    oldSprites.push(...have.map((i) => i.id));
+    for (const { j, mon, sp } of found) {
       const s = slots[j], side = s.size * unit;
       sprites.push(buildImage({ url: sp.url, mime: /\.gif($|\?)/i.test(sp.url) ? "image/gif" : "image/png", width: sp.w, height: sp.h }, { dpi: Math.max(sp.w, sp.h) * lay.dpi / side, offset: { x: sp.w / 2, y: sp.h / 2 } })
         .position({ x: card.position.x + (s.x - CARD.w / 2) * unit, y: card.position.y + (s.y - CARD.h / 2) * unit })
@@ -221,9 +249,10 @@ export async function syncCards({ say = () => {}, force = false } = {}) {
         .metadata({ [ITEM]: { kind: "poke", tab: p.tab, slot: j } }).build());
     }
   }
+  oldSprites.push(...now.filter((i) => mine(i, "poke") && !cfg.players.some((p) => p.tab === i.metadata[ITEM].tab)).map((i) => i.id));
   if (oldSprites.length) await OBR.scene.items.deleteItems(oldSprites);
   if (sprites.length) await OBR.scene.items.addItems(sprites);
-  return { done: jobs.map((j) => j.d.name), missing: [...missing], players: cfg.players.length };
+  return { done: jobs.map((j) => j.d.name), missing: [...missing], players: cfg.players.length, notes, teams: sprites.length > 0 };
 }
 
 // ---- the frame around the map (title, the two eras, the legend), with the map showing through the rift

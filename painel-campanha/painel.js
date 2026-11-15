@@ -1,16 +1,16 @@
 // The panel's page: the GM sets the sheet and the players (tab, look, portrait) and presses the buttons.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { wireKeyBox, needKey } from "../imagem-link/gh.js?v=1.7.0";
-import { ESTILOS } from "./desenho.js?v=0.1.0";
-import { getConfig, setConfig, syncCards, syncFrame, clearScene } from "./motor.js?v=0.1.0";
+import { ESTILOS } from "./desenho.js?v=0.2.0";
+import { getConfig, setConfig, syncCards, syncFrame, clearScene } from "./motor.js?v=0.2.0";
 
 const $ = (id) => document.getElementById(id);
 const say = (t, kind = "") => { $("status").textContent = t || ""; $("status").className = `status small ${kind || "muted"}`; };
 let cfg = null, missing = [];
 
-const save = () => setConfig(cfg).catch((e) => say(`Não consegui salvar: ${e.message}`, "bad"));
-let saveT = 0;
-const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 400); };
+let saveT = 0, pending = false;
+const save = () => { clearTimeout(saveT); return setConfig(cfg).catch((e) => say(`Não consegui salvar: ${e.message}`, "bad")).finally(() => { pending = false; }); };
+const saveSoon = () => { pending = true; clearTimeout(saveT); saveT = setTimeout(save, 400); };
 
 function field(label, value, on, opts = {}) {
   const l = document.createElement("label");
@@ -39,6 +39,7 @@ function drawPlayers() {
       field("Aba na planilha", p.tab, (v) => (p.tab = v.trim()), { placeholder: "Noah" }),
       field("Visual", p.estilo, (v) => (p.estilo = v), { options: Object.entries(ESTILOS).map(([k, s]) => [k, s.nome]) }),
       field("Retrato (link ou arquivo da extensão)", p.retrato, (v) => (p.retrato = v.trim()), { wide: true, placeholder: "https://... (imagem sem fundo)" }),
+      field("Nome na PA Liga (se for diferente)", p.paliga ?? "", (v) => (p.paliga = v.trim()), { wide: true, placeholder: "igual ao da ficha" }),
       field("Zoom do retrato", p.zoom ?? 1, (v) => (p.zoom = Number(v) || 1), { type: "number", step: "0.05" }),
       field("Subir/descer o retrato", p.dy ?? 0, (v) => (p.dy = Number(v) || 0), { type: "number", step: "20" }),
       rm,
@@ -63,7 +64,7 @@ function drawAliases() {
 
 async function run(button, fn) {
   if (!needKey((t) => say(t, "warn"))) return;
-  clearTimeout(saveT); await save();
+  if (pending) await save(); // (only the GM's own unsaved edits: never an old copy over a newer config)
   for (const b of document.querySelectorAll(".btns button")) b.disabled = true;
   try { await fn(); } catch (err) { say(`Não deu certo: ${err.message}`, "bad"); }
   finally { for (const b of document.querySelectorAll(".btns button")) b.disabled = false; }
@@ -73,8 +74,9 @@ $("addPlayer").onclick = () => { cfg.players.push({ tab: "", estilo: "futuro-ver
 $("cards").onclick = () => run($("cards"), async () => {
   const r = await syncCards({ say: (t) => say(t), force: false });
   missing = r.missing; drawAliases();
-  say(r.done.length ? `✓ Cartões atualizados: ${r.done.join(", ")}.` : "✓ Tudo igual às fichas: nada pra atualizar.", "ok");
+  say(r.done.length ? `✓ Cartões atualizados: ${r.done.join(", ")}.` : (r.teams ? "✓ Equipes atualizadas nos cartões." : "✓ Tudo igual às fichas: nada pra atualizar."), "ok");
   if (missing.length) say(`✓ Cartões prontos. Faltou o sprite de: ${missing.join(", ")} (preencha abaixo e atualize de novo).`, "warn");
+  if (r.notes?.length) say(`${$("status").textContent} ${r.notes.join("; ")}.`, "warn");
 });
 $("frame").onclick = () => run($("frame"), async () => { await syncFrame({ say: (t) => say(t) }); say("✓ Moldura do mapa na cena.", "ok"); });
 $("clear").onclick = async () => {
@@ -85,6 +87,7 @@ $("clear").onclick = async () => {
   say(`${n} item(ns) do painel tirado(s) da cena.`);
 };
 $("sheet").oninput = () => { cfg.sheet = $("sheet").value.trim(); saveSoon(); };
+$("paliga").oninput = () => { cfg.paliga = $("paliga").value.trim(); saveSoon(); };
 $("auto").onchange = () => { cfg.auto = $("auto").checked; save(); };
 
 OBR.onReady(async () => {
@@ -94,7 +97,20 @@ OBR.onReady(async () => {
   if ((await OBR.player.getRole()) !== "GM") { $("gm").classList.add("hidden"); say("Só o mestre configura o painel."); return; }
   cfg = await getConfig();
   $("sheet").value = cfg.sheet;
+  $("paliga").value = cfg.paliga ?? "";
   $("auto").checked = !!cfg.auto;
   drawPlayers();
   wireKeyBox((t) => say(t, /^✓/.test(t) ? "ok" : "warn"));
+  // the config changed somewhere else (another window, a tool): this page takes it, instead of saving its
+  // old copy over it later. (Not while the GM is typing here: their edit is about to be saved.)
+  OBR.room.onMetadataChange(async () => {
+    if (pending) return;
+    const fresh = await getConfig();
+    if (JSON.stringify(fresh) === JSON.stringify(cfg)) return;
+    cfg = fresh;
+    $("sheet").value = cfg.sheet;
+    $("paliga").value = cfg.paliga ?? "";
+    $("auto").checked = !!cfg.auto;
+    drawPlayers();
+  });
 });

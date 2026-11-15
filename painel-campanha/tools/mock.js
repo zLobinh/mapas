@@ -27,7 +27,14 @@ const OBR = {
   theme: { getTheme: async () => ({ mode: "DARK" }), onChange: () => {} },
   player: { getRole: async () => "GM" },
   notification: { show: async (m) => console.log("[notification]", m) },
-  room: { getMetadata: async () => structuredClone(meta), setMetadata: async (m) => { meta = { ...meta, ...structuredClone(m) }; } },
+  room: (() => {
+    const subs = [];
+    return {
+      getMetadata: async () => structuredClone(meta),
+      setMetadata: async (m) => { meta = { ...meta, ...structuredClone(m) }; for (const f of subs) f(structuredClone(meta)); },
+      onMetadataChange: (f) => { subs.push(f); return () => {}; },
+    };
+  })(),
   scene: {
     isReady: async () => true,
     grid: { getDpi: async () => 150 },

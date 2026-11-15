@@ -41,6 +41,14 @@ sala e só redesenha o cartão de quem mudou. O jogador só mexe na planilha.
 A equipe entra como sprites animados por cima do cartão, tirados da biblioteca da Imagem por Link. Pokémon com
 **apelido** (ex.: "Snow") aparece numa lista pra você dizer a espécie ou colar o link de uma imagem, uma vez só.
 
+### Equipe pela PA Liga
+
+Com o link do **site dos jogadores da PA Liga** no campo "Site da PA Liga", a equipe de cada cartão passa a ser o
+time atual do treinador na liga: o que o site carrega mais as trocas que o próprio jogador faz online (as mesmas
+que o site aplica). O treinador é achado pelo nome da ficha (ou pelo "Nome na PA Liga" do jogador, se for
+diferente). Quem não for achado continua com a equipe da planilha. Formas regionais ("Vulpix de Alola") usam o
+sprite da forma.
+
 ### Visuais
 
 - **Futuro (verde / ciano)**: neon e hexágonos.
@@ -53,6 +61,7 @@ A equipe entra como sprites animados por cima do cartão, tirados da biblioteca 
 - `desenho.js`: os desenhos em SVG (cartão e moldura), em unidades do layout de referência.
 - `planilha.js`: leitura da planilha (Google guarda um tipo por coluna: listas de texto em colunas de caixinhas
   são pedidas em faixas separadas).
+- `paliga.js`: leitura dos times da PA Liga (site publicado + `ig_rosters` do banco dela).
 - `motor.js`: SVG → imagem, envio pro GitHub (`../imagem-link/gh.js`), itens da cena.
 - Testar fora do Owlbear (na raiz do repositório, `python -m http.server 8792`):
   `painel-campanha/tools/ver.html` (os cartões de verdade, lendo a planilha), `ver.html?moldura` (a moldura) e
