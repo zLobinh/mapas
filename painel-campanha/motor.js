@@ -3,9 +3,9 @@
 // the scene pointing to them. The team's sprites are separate animated tokens placed on the card's sockets.
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready, gh, base64, slug, fold, commitTree, blobEntry, removeEntry, rawUrl } from "../imagem-link/gh.js?v=1.7.0";
-import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.1";
-import { sheetId, readTrainer } from "./planilha.js?v=0.3.1";
-import { readPaliga } from "./paliga.js?v=0.3.1";
+import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.2";
+import { sheetId, readTrainer } from "./planilha.js?v=0.3.2";
+import { readPaliga } from "./paliga.js?v=0.3.2";
 
 export const ID = "com.painel-campanha";
 const CONFIG = `${ID}/config`, STATE = `${ID}/estado`, ITEM = `${ID}/item`;
@@ -132,6 +132,9 @@ async function spriteIndex() {
   indexCache ??= fetch(new URL("../pokemon/index.json", HERE)).then((r) => (r.ok ? r.json() : [])).catch(() => []);
   return indexCache;
 }
+// "0571_Zoroark2.gif", "mega_0003_Venusaur_2.gif", "Lycanroc (9)", "0869 Alcremie 15" -> "zoroark2", "venusaur 2"...
+const stem = (s) => fold(String(s)).replace(/\.\w{2,4}$/, "").replace(/^(mega|forma)_/, "").replace(/^\d+[\s_]+/, "")
+  .replace(/[_()]+/g, " ").replace(/\s+/g, " ").trim();
 async function spriteOf(name, aliases) {
   const alias = aliases?.[name];
   const key = alias || name;
@@ -140,8 +143,12 @@ async function spriteOf(name, aliases) {
     return size ? { url: key, ...size } : null;
   }
   const idx = await spriteIndex(), k = fold(key).trim();
-  let hits = idx.filter((e) => fold(e.n) === k);
-  let e = hits.find((x) => !x.v) ?? hits[0];
+  // 1. the exact picture: the PA Liga names a Pokémon after the GM's sprite file ("Zoroark2", "Lycanroc (9)",
+  //    "0869 Alcremie 15"), the same files this library has ("0571_Zoroark2.gif", "0745_Lycanroc_9.gif")
+  const fk = stem(key);
+  let e = idx.find((x) => !/^(mega|forma)_/.test(x.f) && stem(x.f) === fk);
+  let hits;
+  if (!e) { hits = idx.filter((x) => fold(x.n) === k); e = hits.find((x) => !x.v) ?? hits[0]; }
   if (!e) {
     // regional forms: "Vulpix de Alola", "Zorua Hisui", "Alolan Vulpix"
     const m = k.match(/^(.+?)\s+(?:de\s+|d[eo]\s+)?(alola|galar|hisui|paldea)$/) ?? k.match(/^(alola|galar|hisui|paldea)n?(?:ian)?\s+(.+)$/);
@@ -151,7 +158,12 @@ async function spriteOf(name, aliases) {
       e = hits[0];
     }
   }
-  return e ? { url: new URL(`../pokemon/${e.f}`, HERE).href, w: e.w, h: e.h } : null;
+  // 3. last try: the species without the form's number ("Lycanroc (99)" -> Lycanroc)
+  if (!e) {
+    const base = fk.replace(/\s*\d+$/, "");
+    if (base && base !== fk) { hits = idx.filter((x) => fold(x.n) === base); e = hits.find((x) => !x.v) ?? hits[0]; }
+  }
+  return e ?{ url: new URL(`../pokemon/${e.f}`, HERE).href, w: e.w, h: e.h } : null;
 }
 
 // ---- cards: one per player of the config. -> { done: [names], missing: [nicknames without a sprite] }

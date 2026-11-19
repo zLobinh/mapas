@@ -1,8 +1,8 @@
 // The panel's page: the GM sets the sheet and the players (tab, look, portrait) and presses the buttons.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { wireKeyBox, needKey } from "../imagem-link/gh.js?v=1.7.0";
-import { ESTILOS } from "./desenho.js?v=0.3.1";
-import { getConfig, setConfig, syncCards, syncFrame, syncLabels, editLabels, clearScene } from "./motor.js?v=0.3.1";
+import { ESTILOS } from "./desenho.js?v=0.3.2";
+import { getConfig, setConfig, syncCards, syncFrame, syncLabels, editLabels, clearScene } from "./motor.js?v=0.3.2";
 
 const $ = (id) => document.getElementById(id);
 const say = (t, kind = "") => { $("status").textContent = t || ""; $("status").className = `status small ${kind || "muted"}`; };
