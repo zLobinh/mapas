@@ -16,6 +16,8 @@
       h2 { font-size: 14px; margin: 16px 0 2px; }
       #alias .row { margin-top: 4px; }
       #alias b { min-width: 90px; }
+      .hudbox { padding: 8px; border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+      .hudbox .ok { color: var(--ok); } .hudbox .warn { color: var(--warn); }
     </style>
   </head>
   <body>
@@ -25,6 +27,7 @@
       <div id="status" class="status muted small"></div>
 
       <div id="gm">
+        <div class="hudbox"><div id="hudState" class="small muted"></div><button id="hudBtn" type="button" hidden></button></div>
         <label class="field">
           <span>Planilha das fichas (link)</span>
           <input id="sheet" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." autocomplete="off" />
@@ -73,6 +76,6 @@
       </div>
       <footer class="credit">Criado por: Lobynh</footer>
     </main>
-    <script type="module" src="../painel.js?v=0.3.2"></script>
+    <script type="module" src="../painel.js?v=0.3.3"></script>
   </body>
 </html>

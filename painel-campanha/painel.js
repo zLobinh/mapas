@@ -1,8 +1,8 @@
 // The panel's page: the GM sets the sheet and the players (tab, look, portrait) and presses the buttons.
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { wireKeyBox, needKey } from "../imagem-link/gh.js?v=1.7.0";
-import { ESTILOS } from "./desenho.js?v=0.3.2";
-import { getConfig, setConfig, syncCards, syncFrame, syncLabels, editLabels, clearScene } from "./motor.js?v=0.3.2";
+import { ESTILOS } from "./desenho.js?v=0.3.3";
+import { getConfig, setConfig, syncCards, syncFrame, syncLabels, editLabels, clearScene, isHud, setHud, strayHere } from "./motor.js?v=0.3.3";
 
 const $ = (id) => document.getElementById(id);
 const say = (t, kind = "") => { $("status").textContent = t || ""; $("status").className = `status small ${kind || "muted"}`; };
@@ -67,7 +67,7 @@ async function run(button, fn) {
   if (pending) await save(); // (only the GM's own unsaved edits: never an old copy over a newer config)
   for (const b of document.querySelectorAll(".btns button")) b.disabled = true;
   try { await fn(); } catch (err) { say(`Não deu certo: ${err.message}`, "bad"); }
-  finally { for (const b of document.querySelectorAll(".btns button")) b.disabled = false; }
+  finally { for (const b of document.querySelectorAll(".btns button")) b.disabled = false; drawScene(); }
 }
 
 $("addPlayer").onclick = () => { cfg.players.push({ tab: "", estilo: "futuro-verde", retrato: "", zoom: 1, dy: 0 }); drawPlayers(); };
@@ -90,7 +90,22 @@ $("clear").onclick = async () => {
   b.dataset.sure = ""; b.textContent = "Tirar o painel da cena";
   const n = await clearScene();
   say(`${n} item(ns) do painel tirado(s) da cena.`);
+  drawScene();
 };
+// which scene this is: the panel only adds and updates things in the HUD scene
+async function drawScene() {
+  if (!(await OBR.scene.isReady())) { $("hudState").textContent = "Abra uma cena."; $("hudBtn").hidden = true; return; }
+  const hud = await isHud(), stray = hud ? 0 : await strayHere();
+  $("hudState").textContent = hud ? "✓ Esta cena é a HUD da campanha: o painel atualiza aqui."
+    : stray ? `Esta cena não é a HUD, mas tem ${stray} item(ns) do painel que ficaram aqui. Use "Tirar o painel da cena" pra limpar.`
+    : "Esta cena não é a HUD: o painel não mexe nela.";
+  $("hudState").className = `small ${hud ? "ok" : stray ? "warn" : "muted"}`;
+  $("hudBtn").hidden = false;
+  $("hudBtn").textContent = hud ? "Deixar de usar esta cena como HUD" : "Usar esta cena como HUD";
+  $("hudBtn").dataset.on = hud ? "1" : "";
+  for (const id of ["cards", "frame", "labels"]) $(id).disabled = !hud;
+}
+$("hudBtn").onclick = async () => { await setHud(!$("hudBtn").dataset.on); await drawScene(); };
 $("sheet").oninput = () => { cfg.sheet = $("sheet").value.trim(); saveSoon(); };
 $("paliga").oninput = () => { cfg.paliga = $("paliga").value.trim(); saveSoon(); };
 $("auto").onchange = () => { cfg.auto = $("auto").checked; save(); };
@@ -106,6 +121,9 @@ OBR.onReady(async () => {
   $("auto").checked = !!cfg.auto;
   drawPlayers();
   wireKeyBox((t) => say(t, /^✓/.test(t) ? "ok" : "warn"));
+  drawScene();
+  OBR.scene.onReadyChange(() => drawScene());
+  OBR.scene.onMetadataChange(() => drawScene());
   // the config changed somewhere else (another window, a tool): this page takes it, instead of saving its
   // old copy over it later. (Not while the GM is typing here: their edit is about to be saved.)
   OBR.room.onMetadataChange(async () => {

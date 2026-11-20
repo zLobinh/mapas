@@ -15,6 +15,13 @@ https://zlobinh.github.io/mapas/painel-campanha/manifest.json
 Precisa do **⚙ GitHub** configurado (o mesmo repositório e chave da Imagem por Link): as imagens que o painel
 desenha vão pra pasta `painel/` do seu repositório.
 
+## Só na cena da HUD
+
+O painel só coloca e atualiza coisas na cena marcada como **HUD** (o topo da janela da extensão mostra se a cena
+aberta é ela, com o botão **Usar esta cena como HUD**). Nas outras cenas ele não mexe em nada, nem na conferência
+automática. A cena que já tinha a moldura ou os nomes estilizados vira a HUD sozinha. Se sobrou cartão numa cena
+que não é a HUD, a extensão avisa: **Tirar o painel da cena** limpa.
+
 ## Como usar (só o mestre)
 
 1. Cole o link da **planilha das fichas** (compartilhada como "qualquer pessoa com o link pode ver").

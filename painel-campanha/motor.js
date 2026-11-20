@@ -3,9 +3,9 @@
 // the scene pointing to them. The team's sprites are separate animated tokens placed on the card's sockets.
 import OBR, { buildImage } from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready, gh, base64, slug, fold, commitTree, blobEntry, removeEntry, rawUrl } from "../imagem-link/gh.js?v=1.7.0";
-import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.2";
-import { sheetId, readTrainer } from "./planilha.js?v=0.3.2";
-import { readPaliga } from "./paliga.js?v=0.3.2";
+import { MAP, CARD, FRAME, cardSVG, frameSVG, teamSlots, labelsSVG } from "./desenho.js?v=0.3.3";
+import { sheetId, readTrainer } from "./planilha.js?v=0.3.3";
+import { readPaliga } from "./paliga.js?v=0.3.3";
 
 export const ID = "com.painel-campanha";
 const CONFIG = `${ID}/config`, STATE = `${ID}/estado`, ITEM = `${ID}/item`;
@@ -110,7 +110,31 @@ async function findMap(items) {
   const area = (i) => (i.image.width / i.grid.dpi) * Math.abs(i.scale.x) * (i.image.height / i.grid.dpi) * Math.abs(i.scale.y);
   return maps.sort((a, b) => area(b) - area(a))[0] ?? null;
 }
+// ---- the HUD scene: the panel only ever adds or updates things in the scene the GM chose for it (the
+// extensions can't read a scene's name, so the choice is a mark in that scene's own data). A scene that
+// already has the map frame or the styled labels counts as chosen (rooms set up before the mark existed):
+// those two were only ever placed by hand, while the cards also landed in other scenes by the automatic check.
+const HUD = `${ID}/hud`;
+export async function isHud() {
+  if (!(await OBR.scene.isReady())) return false;
+  const m = await OBR.scene.getMetadata();
+  if (HUD in m) return !!m[HUD];
+  const has = (await OBR.scene.items.getItems()).some((i) => ["frame", "labels"].includes(i.metadata?.[ITEM]?.kind));
+  if (has) await OBR.scene.setMetadata({ [HUD]: true });
+  return has;
+}
+// this scene has panel items although it isn't the HUD (left there by the old automatic check)
+export async function strayHere() {
+  if (await isHud()) return 0;
+  return (await OBR.scene.items.getItems()).filter((i) => i.metadata?.[ITEM]).length;
+}
+export const setHud = (on) => OBR.scene.setMetadata({ [HUD]: !!on });
+async function needHud() {
+  if (!(await isHud())) throw new Error("esta cena não é a HUD da campanha: abra a cena da HUD, ou marque esta em \"Usar esta cena como HUD\"");
+}
+
 async function layout() {
+  await needHud();
   const items = await OBR.scene.items.getItems();
   const dpi = await OBR.scene.grid.getDpi();
   const map = await findMap(items);

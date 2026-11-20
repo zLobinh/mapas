@@ -2,7 +2,7 @@
 // whose data changed (nothing is sent when nothing changed).
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk@3.1.0/+esm";
 import { ready } from "../imagem-link/gh.js?v=1.7.0";
-import { getConfig, syncCards } from "./motor.js?v=0.3.2";
+import { getConfig, syncCards, isHud } from "./motor.js?v=0.3.3";
 
 const EVERY = 5 * 60 * 1000;
 let busy = false;
@@ -10,7 +10,8 @@ async function tick() {
   if (busy || !ready()) return;
   busy = true;
   try {
-    if ((await OBR.player.getRole()) !== "GM" || !(await OBR.scene.isReady())) return;
+    // (only in the HUD scene: the other maps are never touched)
+    if ((await OBR.player.getRole()) !== "GM" || !(await isHud())) return;
     const cfg = await getConfig();
     if (!cfg.auto || !cfg.sheet || !cfg.players.length) return;
     const r = await syncCards();

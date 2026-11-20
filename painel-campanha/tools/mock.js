@@ -37,6 +37,16 @@ const OBR = {
   })(),
   scene: {
     isReady: async () => true,
+    onReadyChange: () => () => {},
+    ...(() => {
+      let sm = {}; const subs = [];
+      window.__sceneMeta = () => sm;
+      return {
+        getMetadata: async () => structuredClone(sm),
+        setMetadata: async (m) => { sm = { ...sm, ...structuredClone(m) }; for (const f of subs) f(structuredClone(sm)); },
+        onMetadataChange: (f) => { subs.push(f); return () => {}; },
+      };
+    })(),
     grid: { getDpi: async () => 150 },
     items: {
       getItems: async () => structuredClone(items),
